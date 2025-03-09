@@ -1,0 +1,5 @@
+streamlit==1.40.1
+pandas==2.0.3
+numpy==1.24.4
+streamlit-custom-notification-box==0.1.2
+streamlit-extras==0.5.5
