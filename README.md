@@ -8,7 +8,6 @@ A modern, industrial-grade dashboard for tracking employee performance metrics b
 - **Date Range Filtering**: Select custom date ranges to view performance metrics
 - **Performance Metrics**: View key metrics including Total Marks, Trainer Grade, and Training Count
 - **Status Indicator**: Visual status indicator showing Pass/Fail status
-- **Modern UI**: Dark theme with sleek animations and responsive design
 
 ## Installation
 
