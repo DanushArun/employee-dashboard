@@ -16,7 +16,7 @@ A modern, industrial-grade dashboard for tracking employee performance metrics b
 
 1. Clone this repository:
 ```bash
-git clone https://github.com/yourusername/employee-dashboard.git
+git clone https://github.com/DanushArun/employee-dashboard.git
 cd employee-dashboard
 ```
 
