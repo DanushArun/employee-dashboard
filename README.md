@@ -2,8 +2,6 @@
 
 A modern, industrial-grade dashboard for tracking employee performance metrics built with Streamlit.
 
-![Dashboard Preview](https://i.imgur.com/example.png)
-
 ## Features
 
 - **Employee Selection**: Searchable dropdown to select employees by ID
