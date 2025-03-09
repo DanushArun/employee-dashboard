@@ -53,14 +53,16 @@ Run the dashboard locally using the instructions above. The dashboard will be ac
 
 ### Cloud Deployment
 
-To deploy to Streamlit Cloud:
+For detailed instructions on deploying to Streamlit Cloud, see the [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) file.
 
-1. Create a GitHub repository with your dashboard code
-2. Sign up for [Streamlit Cloud](https://streamlit.io/cloud)
+In summary:
+1. Push your code to GitHub
+2. Sign up for [Streamlit Cloud](https://share.streamlit.io/)
 3. Connect your GitHub repository
-4. Configure the deployment settings:
-   - Main file path: `app.py`
-   - Python version: 3.9+
+4. Deploy with a few clicks
+5. Share the generated URL with anyone
+
+The dashboard will be accessible from anywhere with an internet connection, and updates automatically when you push changes to GitHub.
 
 ## Data Structure
 

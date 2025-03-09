@@ -42,7 +42,7 @@ def deploy_dashboard():
         To deploy to Streamlit Cloud:
         
         1. Create a GitHub repository with your dashboard code
-        2. Sign up for [Streamlit Cloud](https://streamlit.io/cloud)
+        2. Sign up for [Streamlit Cloud](https://share.streamlit.io/)
         3. Connect your GitHub repository
         4. Configure the deployment settings:
            - Main file path: `app.py`
@@ -50,6 +50,26 @@ def deploy_dashboard():
         """)
         
         st.info("This method allows you to access your dashboard from anywhere with an internet connection.")
+        
+        st.write("""
+        For detailed step-by-step instructions, please refer to the `DEPLOYMENT_GUIDE.md` file in the project directory.
+        """)
+        
+        if st.button("Open Deployment Guide"):
+            # Try to open the deployment guide with the default text editor
+            try:
+                if os.path.exists("DEPLOYMENT_GUIDE.md"):
+                    if sys.platform.startswith('darwin'):  # macOS
+                        subprocess.run(["open", "DEPLOYMENT_GUIDE.md"], check=True)
+                    elif sys.platform.startswith('win'):  # Windows
+                        os.startfile("DEPLOYMENT_GUIDE.md")
+                    else:  # Linux
+                        subprocess.run(["xdg-open", "DEPLOYMENT_GUIDE.md"], check=True)
+                    st.success("Opened DEPLOYMENT_GUIDE.md")
+                else:
+                    st.error("DEPLOYMENT_GUIDE.md not found")
+            except Exception as e:
+                st.error(f"Failed to open the deployment guide: {e}")
 
 if __name__ == "__main__":
     deploy_dashboard()
