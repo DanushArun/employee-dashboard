@@ -1,706 +1,585 @@
 import streamlit as st
 import pandas as pd
-from datetime import datetime, timedelta
+import json
+import datetime
+import requests
 from PIL import Image
+import os
+import io
+import base64
+from datetime import datetime, timedelta
 
 # Page config
 st.set_page_config(
-    page_title="Employee Performance Dashboard",
+    page_title="Veronica Admin Dashboard",
+    page_icon="src/assets/drivex-logo.png",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# Custom CSS
+# Custom CSS with Google Fonts import
 st.markdown("""
     <style>
+    /* Import Google Fonts */
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    
     /* Main theme colors */
     :root {
         --background-color: #000000;
-        --accent-color: #00FF9D;
+        --accent-color: #8A2BE2;
         --text-color: #FFFFFF;
         --card-bg: #1C1C1C;
         --hover-bg: #2D2D2D;
+        --purple-glass: rgba(75, 0, 130, 0.7);
+        --button-color: #9370DB;
+        --title-font: 'Orbitron', sans-serif; /* Digital/tech font for titles */
+        --body-font: 'Inter', sans-serif; /* Clean sans-serif for body text */
     }
     
     .stApp {
         background-color: var(--background-color);
+        font-family: var(--body-font);
     }
     
-    /* Metric cards */
-    div[data-testid="metric-container"] {
-        background-color: var(--card-bg);
+    /* Header with glass effect */
+    .header-container {
+        background: rgba(75, 0, 130, 0.7);
         border-radius: 12px;
-        padding: 1.5rem;
+        padding: 1.5rem 2rem;
+        margin-bottom: 2rem;
+        backdrop-filter: blur(10px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
         border: 1px solid rgba(255, 255, 255, 0.1);
     }
     
-    div[data-testid="metric-container"] label {
-        color: #888 !important;
-        font-size: 14px !important;
-        font-weight: 600 !important;
-    }
-    
-    div[data-testid="metric-container"] div[data-testid="stMetricValue"] {
-        color: var(--text-color) !important;
-    }
-    
-    /* Status styles */
-    .status-pass {
-        background-color: rgba(0, 255, 157, 0.2);
-        color: #00FF9D;
-        padding: 8px 16px;
-        border-radius: 6px;
+    .header-title {
+        color: white;
+        font-family: var(--title-font);
+        font-size: 2.5rem;
         font-weight: 600;
+        margin-left: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 2px;
     }
     
-    .status-fail {
-        background-color: rgba(255, 71, 87, 0.2);
-        color: #FF4757;
-        padding: 8px 16px;
-        border-radius: 6px;
-        font-weight: 600;
+    /* Search bar styling */
+    .search-container {
+        margin-bottom: 2rem;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
     }
     
-    /* Input styling */
-    .stSelectbox [data-baseweb="select"] {
-        background-color: var(--card-bg) !important;
-    }
-    
-    /* Dropdown styling */
-    .stSelectbox [data-baseweb="popover"] {
-        background-color: var(--card-bg) !important;
-        border: 1px solid var(--accent-color) !important;
-    }
-    
-    .stSelectbox [data-baseweb="select-option"] {
-        background-color: var(--card-bg) !important;
-    }
-    
-    .stSelectbox [data-baseweb="select-option"]:hover {
-        background-color: var(--hover-bg) !important;
-    }
-    
-    .stSelectbox [data-baseweb="select-option"][aria-selected="true"] {
-        background-color: var(--accent-color) !important;
-        color: var(--background-color) !important;
-    }
-    
-    /* Search input styling */
-    .stSelectbox input {
-        background-color: var(--card-bg) !important;
-        color: var(--text-color) !important;
-    }
-    
-    /* Text input styling */
+    /* Override Streamlit's default input styling */
     .stTextInput > div > div > input {
-        background-color: var(--card-bg) !important;
-        color: var(--text-color) !important;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 6px;
-    }
-    
-    .stTextInput > div > div > input:focus {
-        border-color: var(--accent-color) !important;
-        box-shadow: 0 0 0 1px var(--accent-color) !important;
+        background-color: #2D2D2D !important;
+        color: white !important;
+        border-radius: 20px !important;
+        padding: 10px 15px !important;
+        border: none !important;
+        height: 45px !important;
+        font-family: var(--body-font) !important;
     }
     
     .stTextInput > div > div > input::placeholder {
-        color: rgba(255, 255, 255, 0.5);
+        color: #888 !important;
+        font-family: var(--body-font) !important;
     }
     
-    /* Remove all focus outlines completely */
-    *:focus {
-        outline: none !important;
-        box-shadow: none !important;
+    /* Store card styling */
+    .store-card {
+        background-color: #1A1A1A;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 0.5rem;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
     
-    *:focus-visible {
-        outline: none !important;
-        box-shadow: none !important;
+    .store-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
     }
     
-    /* Remove all focus styling */
-    .stSelectbox [data-baseweb="select"]:focus-within {
-        border-color: var(--accent-color) !important;
-        box-shadow: none !important;
-        outline: none !important;
+    .store-name {
+        font-family: var(--body-font);
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: white;
     }
     
-    /* Date input styling */
+    .store-id {
+        font-family: var(--body-font);
+        color: #888;
+        font-size: 0.9rem;
+        margin-bottom: 0;
+    }
+    
+    /* Button styling */
+    .stButton > button {
+        background-color: rgba(75, 0, 130, 0.2) !important;
+        color: white !important;
+        border-radius: 4px !important;
+        padding: 0.3rem 0.8rem !important;
+        font-family: var(--body-font) !important;
+        font-weight: 400 !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        transition: all 0.3s ease !important;
+        backdrop-filter: blur(5px) !important;
+        font-size: 0.9rem !important;
+    }
+    
+    .stButton > button:hover {
+        background-color: rgba(75, 0, 130, 0.4) !important;
+        transform: translateY(-1px) !important;
+    }
+    
+    /* Date picker styling */
     .stDateInput > div {
-        background-color: var(--card-bg) !important;
+        background-color: transparent !important;
+        border-radius: 0 !important;
+        border: none !important;
+        font-family: var(--body-font) !important;
+        padding: 0 !important;
     }
     
-    .stDateInput > div:focus-within {
-        border-color: var(--accent-color) !important;
-        box-shadow: none !important;
-        outline: none !important;
+    .stDateInput > div > div > div > div {
+        background-color: transparent !important;
+        color: white !important;
+        font-family: var(--body-font) !important;
     }
     
-    /* Override Streamlit's default focus styles */
-    [data-baseweb="select"] {
-        outline: none !important;
-        box-shadow: none !important;
-    }
-    
-    [data-baseweb="select"]:focus {
-        outline: none !important;
-        box-shadow: none !important;
-    }
-    
-    [data-baseweb="input"] {
-        outline: none !important;
-        box-shadow: none !important;
-    }
-    
-    [data-baseweb="input"]:focus {
-        outline: none !important;
-        box-shadow: none !important;
-    }
-    
-    /* Override for dropdown items */
-    [data-baseweb="menu"] {
-        outline: none !important;
-        box-shadow: none !important;
-    }
-    
-    [data-baseweb="select-option"]:focus {
-        background-color: var(--accent-color) !important;
-        color: var(--background-color) !important;
-        outline: none !important;
-        box-shadow: none !important;
-    }
-    
-    /* Remove all outlines and shadows */
-    button:focus {
-        outline: none !important;
-        box-shadow: none !important;
-    }
-    
-    input:focus {
-        outline: none !important;
-        box-shadow: none !important;
-    }
-    
-    select:focus {
-        outline: none !important;
-        box-shadow: none !important;
-    }
-    
-    /* Override Streamlit's default styles */
-    .stApp [role="button"]:focus {
-        outline: none !important;
-        box-shadow: none !important;
+    .stDateInput input {
+        color: white !important;
+        font-family: var(--body-font) !important;
+        font-size: 0.9rem !important;
     }
     
     /* Calendar styling */
     .streamlit-expanderContent div[data-baseweb="calendar"] {
-        background-color: var(--card-bg) !important;
+        background-color: #1A1A1A !important;
+        font-family: var(--body-font) !important;
     }
     
     .streamlit-expanderContent div[data-baseweb="calendar"] button {
-        color: var(--text-color) !important;
+        color: white !important;
+        font-family: var(--body-font) !important;
     }
     
     .streamlit-expanderContent div[data-baseweb="calendar"] button:hover {
-        background-color: var(--accent-color) !important;
-        color: var(--background-color) !important;
+        background-color: #9370DB !important;
     }
     
     .streamlit-expanderContent div[data-baseweb="calendar"] button[aria-selected="true"] {
-        background-color: var(--accent-color) !important;
-        color: var(--background-color) !important;
+        background-color: #9370DB !important;
     }
-    </style>
-""", unsafe_allow_html=True)
-
-# Add logo
-logo = Image.open('src/assets/ather-logo.png')
-st.image(logo, width=130)
-
-# Header with HALO-style font
-st.markdown("""
-    <style>
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap');
     
-    .halo-font {
-        font-family: 'Orbitron', sans-serif;
-        color: #00FF9D;
-        margin-bottom: 2rem;
-        text-transform: uppercase;
-        letter-spacing: 2px;
+    /* Visitor count styling */
+    .visitor-count {
+        font-family: var(--body-font);
+        font-size: 3rem;
         font-weight: 700;
+        margin-bottom: 0.25rem;
+    }
+    
+    .visitor-date {
+        font-family: var(--body-font);
+        color: #00FF00;
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Table styling */
+    .styled-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 1rem;
+        background-color: #1A1A1A;
+        border-radius: 8px;
+        overflow: hidden;
+        font-family: var(--body-font);
+    }
+    
+    .styled-table th {
+        background-color: rgba(75, 0, 130, 0.3);
+        color: white;
+        padding: 0.75rem;
+        text-align: left;
+        font-weight: 500;
+        font-family: var(--body-font);
+    }
+    
+    .styled-table td {
+        padding: 0.75rem;
+        border-bottom: 1px solid #333;
+        color: white;
+        font-family: var(--body-font);
+    }
+    
+    .styled-table tr:last-child td {
+        border-bottom: none;
+    }
+    
+    /* Chart styling */
+    .stChart {
+        background-color: #1A1A1A;
+        border-radius: 8px;
+        padding: 0.5rem;
+    }
+    
+    /* Analytics cards */
+    .analytics-card {
+        background-color: #1A1A1A;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 0.5rem;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .analytics-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+    }
+    
+    .analytics-title {
+        font-family: var(--title-font);
+        color: #888;
+        font-size: 0.9rem;
+        margin-bottom: 0.25rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .analytics-value {
+        font-family: var(--body-font);
         font-size: 2.5rem;
+        font-weight: 700;
+        color: white;
+    }
+    
+    /* Section titles */
+    .section-title {
+        font-family: var(--title-font);
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        margin-top: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    /* Last updated text */
+    .last-updated {
+        font-family: var(--body-font);
+        color: #888;
+        font-size: 0.9rem;
+        font-style: italic;
+        margin-top: 0.5rem;
+    }
+    
+    /* Override all text to use our fonts */
+    body, p, h1, h2, h3, h4, h5, h6, span, div {
+        font-family: var(--body-font);
+    }
+    
+    /* Apply title font to section titles */
+    h1, h2, h3.section-title {
+        font-family: var(--title-font);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    /* Hide Streamlit elements */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    .stDeployButton {display:none;}
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .analytics-card {
+            min-width: 100%;
+        }
     }
     </style>
-    
-    <h1 class="halo-font">Employee Performance Dashboard</h1>
 """, unsafe_allow_html=True)
 
-# Load and cache data
+# Load store data
 @st.cache_data
-def load_data():
-    # Read the Test Data.csv file
-    with open('data/Test Data.csv', 'r') as f:
-        content = f.read()
+def load_stores():
+    try:
+        with open('data/stores.json', 'r') as f:
+            data = json.load(f)
+            return data['stores']
+    except Exception as e:
+        st.error(f"Error loading store data: {e}")
+        return []
+
+# Mock API call function
+def fetch_store_metrics(store_id, date):
+    """
+    Mock function to fetch store metrics from API
+    In production, this would make an actual API call
+    """
+    # Format the API endpoint
+    api_endpoint = f"/api/v1/analytics/stores/metrics/?store_id={store_id}&date={date}"
     
-    # Split by lines
-    lines = content.split('\n')
+    # In a real implementation, this would be:
+    # response = requests.get(api_endpoint)
+    # return response.json()
     
-    # Extract different sections
-    core_section = []
-    ul_pl_section = []
-    zone_loss_section = []
-    error_count_section = []
-    unsafe_act_section = []
-    kaizen_section = []
-    flexibility_section = []
-    teamwork_section = []
-    
-    current_section = core_section
-    for line in lines:
-        if not line.strip():
-            continue
-            
-        if "Month,Employee ID,UL" in line:
-            current_section = ul_pl_section
-            ul_pl_section.append(line)
-        elif "Month,Employee ID,ZONE,LINE LOSS" in line:
-            current_section = zone_loss_section
-            zone_loss_section.append(line)
-        elif "Month,Employee ID,ZONE,ERROR COUNT" in line:
-            current_section = error_count_section
-            error_count_section.append(line)
-        elif "Month,Employee ID,UNSAFE ACT REPORTED" in line:
-            current_section = unsafe_act_section
-            unsafe_act_section.append(line)
-        elif "Month,Employee ID,KAIZEN RESPONSIBLE" in line:
-            current_section = kaizen_section
-            kaizen_section.append(line)
-        elif "Month,Employee ID,FLEXIBILITY CREDIT" in line:
-            current_section = flexibility_section
-            flexibility_section.append(line)
-        elif "Month,Employee ID,TEAMWORK CREDIT" in line:
-            current_section = teamwork_section
-            teamwork_section.append(line)
-        else:
-            current_section.append(line)
-    
-    # Parse core data
-    core_data = []
-    for i, line in enumerate(core_section):
-        if i == 0:  # Skip header
-            continue
-            
-        parts = line.split(',')
-        if len(parts) >= 4:
-            employee_id = parts[0].strip()
-            training_grade = parts[1].strip()
-            training_count = parts[2].strip()
-            status = parts[3].strip()
-            
-            core_data.append({
-                'employee_id': employee_id,
-                'trainer_grade': float(training_grade) if training_grade.isdigit() else 0,
-                'training_count': int(training_count) if training_count.isdigit() else 0,
-                'status': status.capitalize()
-            })
-        else:
-            # Handle fixed-width format
-            if len(line) >= 10:
-                employee_id = line[:4].strip()
-                training_grade = line[4:6].strip()
-                training_count = line[6:8].strip()
-                status = line[8:].strip()
-                
-                core_data.append({
-                    'employee_id': employee_id,
-                    'trainer_grade': float(training_grade) if training_grade.isdigit() else 0,
-                    'training_count': int(training_count) if training_count.isdigit() else 0,
-                    'status': status.capitalize()
-                })
-    
-    # Parse UL/PL data
-    ul_pl_data = {}
-    for i, line in enumerate(ul_pl_section):
-        if i == 0:  # Skip header
-            continue
-            
-        parts = line.split(',')
-        if len(parts) >= 4:
-            month = parts[0].strip().lower()
-            employee_id = parts[1].strip()
-            ul = parts[2].strip()
-            pl = parts[3].strip()
-            
-            ul_pl_data[employee_id] = {
-                'month': month,
-                'ul': float(ul) if ul.isdigit() else 0,
-                'pl': float(pl) if pl.isdigit() else 0
-            }
-    
-    # Parse Zone/Line Loss data
-    zone_loss_data = {}
-    for i, line in enumerate(zone_loss_section):
-        if i == 0:  # Skip header
-            continue
-            
-        parts = line.split(',')
-        if len(parts) >= 4:
-            month = parts[0].strip().lower()
-            employee_id = parts[1].strip()
-            zone = parts[2].strip()
-            line_loss = parts[3].strip()
-            
-            zone_loss_data[employee_id] = {
-                'month': month,
-                'zone': int(zone) if zone.isdigit() else 0,
-                'line_loss': float(line_loss) if line_loss.isdigit() else 0
-            }
-    
-    # Parse Error Count data
-    error_count_data = {}
-    for i, line in enumerate(error_count_section):
-        if i == 0:  # Skip header
-            continue
-            
-        parts = line.split(',')
-        if len(parts) >= 4:
-            month = parts[0].strip().lower()
-            employee_id = parts[1].strip()
-            zone = parts[2].strip()
-            error_count = parts[3].strip()
-            
-            error_count_data[employee_id] = {
-                'month': month,
-                'zone': int(zone) if zone.isdigit() else 0,
-                'error_count': int(error_count) if error_count.isdigit() else 0
-            }
-    
-    # Parse Unsafe Act data
-    unsafe_act_data = {}
-    for i, line in enumerate(unsafe_act_section):
-        if i == 0:  # Skip header
-            continue
-            
-        parts = line.split(',')
-        if len(parts) >= 4:
-            month = parts[0].strip().lower()
-            employee_id = parts[1].strip()
-            reported = parts[2].strip()
-            responsible = parts[3].strip()
-            
-            unsafe_act_data[employee_id] = {
-                'month': month,
-                'unsafe_act_reported': int(reported) if reported.isdigit() else 0,
-                'unsafe_act_responsible': int(responsible) if responsible.isdigit() else 0
-            }
-    
-    # Parse Kaizen data
-    kaizen_data = {}
-    for i, line in enumerate(kaizen_section):
-        if i == 0:  # Skip header
-            continue
-            
-        parts = line.split(',')
-        if len(parts) >= 3:
-            month = parts[0].strip().lower()
-            employee_id = parts[1].strip()
-            kaizen = parts[2].strip()
-            
-            kaizen_data[employee_id] = {
-                'month': month,
-                'kaizen_responsible': int(kaizen) if kaizen.isdigit() else 0
-            }
-    
-    # Parse Flexibility data
-    flexibility_data = {}
-    for i, line in enumerate(flexibility_section):
-        if i == 0:  # Skip header
-            continue
-            
-        parts = line.split(',')
-        if len(parts) >= 3:
-            month = parts[0].strip().lower()
-            employee_id = parts[1].strip()
-            flexibility = parts[2].strip()
-            
-            flexibility_data[employee_id] = {
-                'month': month,
-                'flexibility_credit': int(flexibility) if flexibility.isdigit() else 0
-            }
-    
-    # Parse Teamwork data
-    teamwork_data = {}
-    for i, line in enumerate(teamwork_section):
-        if i == 0:  # Skip header
-            continue
-            
-        parts = line.split(',')
-        if len(parts) >= 3:
-            month = parts[0].strip().lower()
-            employee_id = parts[1].strip()
-            teamwork = parts[2].strip()
-            
-            teamwork_data[employee_id] = {
-                'month': month,
-                'teamwork_credit': int(teamwork) if teamwork.isdigit() else 0
-            }
-    
-    # Create main DataFrame
-    df = pd.DataFrame(core_data)
-    
-    # Add additional metrics
-    for employee_id in df['employee_id']:
-        # UL/PL metrics
-        if employee_id in ul_pl_data:
-            df.loc[df['employee_id'] == employee_id, 'ul'] = ul_pl_data[employee_id]['ul']
-            df.loc[df['employee_id'] == employee_id, 'pl'] = ul_pl_data[employee_id]['pl']
-            df.loc[df['employee_id'] == employee_id, 'month'] = ul_pl_data[employee_id]['month']
-        
-        # Zone/Line Loss metrics
-        if employee_id in zone_loss_data:
-            df.loc[df['employee_id'] == employee_id, 'zone'] = zone_loss_data[employee_id]['zone']
-            df.loc[df['employee_id'] == employee_id, 'line_loss'] = zone_loss_data[employee_id]['line_loss']
-        
-        # Error Count metrics
-        if employee_id in error_count_data:
-            df.loc[df['employee_id'] == employee_id, 'error_count'] = error_count_data[employee_id]['error_count']
-        
-        # Unsafe Act metrics
-        if employee_id in unsafe_act_data:
-            df.loc[df['employee_id'] == employee_id, 'unsafe_act_reported'] = unsafe_act_data[employee_id]['unsafe_act_reported']
-            df.loc[df['employee_id'] == employee_id, 'unsafe_act_responsible'] = unsafe_act_data[employee_id]['unsafe_act_responsible']
-        
-        # Kaizen metrics
-        if employee_id in kaizen_data:
-            df.loc[df['employee_id'] == employee_id, 'kaizen_responsible'] = kaizen_data[employee_id]['kaizen_responsible']
-        
-        # Flexibility metrics
-        if employee_id in flexibility_data:
-            df.loc[df['employee_id'] == employee_id, 'flexibility_credit'] = flexibility_data[employee_id]['flexibility_credit']
-        
-        # Teamwork metrics
-        if employee_id in teamwork_data:
-            df.loc[df['employee_id'] == employee_id, 'teamwork_credit'] = teamwork_data[employee_id]['teamwork_credit']
-    
-    # Fill NaN values
-    df = df.fillna(0)
-    
-    # Calculate total marks with additional metrics
-    df['total_marks'] = (
-        df['trainer_grade'] + 
-        df['training_count'] * 0.1 +
-        df['ul'] * 0.2 +
-        df['pl'] * 0.2 -
-        df['error_count'] * 0.1 +
-        df['kaizen_responsible'] * 0.3 +
-        df['flexibility_credit'] * 0.2 +
-        df['teamwork_credit'] * 0.2
-    )
-    
-    # Convert month to date
-    month_map = {
-        'jan': 1, 'feb': 2, 'mar': 3, 'apr': 4, 'may': 5, 'june': 6, 
-        'july': 7, 'aug': 8, 'sept': 9, 'oct': 10, 'nov': 11, 'dec': 12
+    # For now, return mock data
+    return {
+        "total_visitors": 0,
+        "hourly_breakdown": {
+            "10:00-11:00": 0,
+            "11:00-12:00": 0,
+            "12:00-13:00": 0,
+            "13:00-14:00": 0,
+            "14:00-15:00": 0,
+            "15:00-16:00": 0,
+            "16:00-17:00": 0,
+            "17:00-18:00": 0,
+            "18:00-19:00": 0,
+            "19:00-20:00": 0
+        },
+        "analytics": {
+            "unique_visitors": 0,
+            "test_ride_count": 0,
+            "qr_code_count": 0,
+            "callstore_count": 0
+        },
+        "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
-    
-    df['date'] = df['month'].apply(
-        lambda m: pd.Timestamp(f"2025-{month_map.get(m.lower(), 1):02d}-01") 
-        if isinstance(m, str) and m.lower() in month_map 
-        else pd.Timestamp('2025-01-01')
-    )
-    
-    return df
 
-# Load data
-df = load_data()
-
-# Create two columns for filters
-col1, col2 = st.columns(2)
-
-with col1:
-    # Employee ID dropdown with enhanced search
-    st.markdown("<p style='color: #888; font-size: 14px; margin-bottom: 8px;'>EMPLOYEE ID List</p>", unsafe_allow_html=True)
-    
-    # Add search functionality
-    search_term = st.text_input(
-        "Search",
-        key="search_employee",
-        placeholder="Type to search employee IDs...",
-        label_visibility="collapsed"
-    ).upper()
-    
-    # Filter employee IDs based on search
-    employee_ids = [''] + sorted(df['employee_id'].unique().tolist())
-    if search_term:
-        filtered_ids = [eid for eid in employee_ids if search_term in str(eid)]
+# Main function
+def main():
+    # Check if we're in the store detail view
+    if 'store_id' in st.session_state and st.session_state.store_id:
+        show_store_detail(st.session_state.store_id)
     else:
-        filtered_ids = employee_ids
+        show_main_page()
+
+def show_main_page():
+    # Header with logo and title
+    try:
+        logo = Image.open('src/assets/drivex-logo.png')
+        logo_bytes = io.BytesIO()
+        logo.save(logo_bytes, format='PNG')
+        logo_base64 = base64.b64encode(logo_bytes.getvalue()).decode()
+        
+        st.markdown(f"""
+            <div class="header-container">
+                <img src="data:image/png;base64,{logo_base64}" alt="DriveX Logo" width="150">
+                <h1 class="header-title">Veronica Admin Dashboard</h1>
+            </div>
+        """, unsafe_allow_html=True)
+    except Exception as e:
+        st.error(f"Error loading logo: {e}")
+        st.markdown("""
+            <div class="header-container">
+                <h1 class="header-title">Veronica Admin Dashboard</h1>
+            </div>
+        """, unsafe_allow_html=True)
     
-    # Employee ID dropdown
-    employee_id = st.selectbox(
-        "-",
-        options=filtered_ids,
-        format_func=lambda x: x if x else "Select an Employee ID",
-        label_visibility="collapsed"
-    )
-
-with col2:
-    # Month selector (only shown if an employee is selected)
-    if employee_id:
-        # Get months that have data for this employee
-        employee_months = df[df['employee_id'] == employee_id]['month'].unique()
-        
-        # Create a mapping for month display names
-        month_display_map = {
-            'jan': 'January',
-            'feb': 'February',
-            'mar': 'March',
-            'apr': 'April',
-            'may': 'May',
-            'june': 'June',
-            'july': 'July',
-            'aug': 'August',
-            'sept': 'September',
-            'oct': 'October',
-            'nov': 'November',
-            'dec': 'December'
-        }
-        
-        # Create month options with proper capitalization
-        month_options = [month_display_map.get(m.lower(), m.capitalize()) if isinstance(m, str) else "Unknown" 
-                         for m in employee_months]
-        
-        # If no months found, show a message
-        if not month_options:
-            st.markdown("<p style='color: #888; font-size: 14px;'>No month data available for this employee</p>", unsafe_allow_html=True)
-            selected_month = None
-        else:
-            # Show available months
-            st.markdown("<p style='color: #888; font-size: 14px; margin-bottom: 8px;'>MONTH</p>", unsafe_allow_html=True)
-            
-            # Create a mapping from display name back to actual month value
-            reverse_month_map = {v: k for k, v in month_display_map.items()}
-            
-            # Month dropdown
-            selected_month_display = st.selectbox(
-                "Month",
-                options=month_options,
-                index=0,
-                key="month_selector",
-                label_visibility="collapsed"
-            )
-            
-            # Convert display name back to actual month value
-            selected_month = reverse_month_map.get(selected_month_display, selected_month_display.lower())
-            
-            # Show available months for this employee
-            if len(month_options) > 1:
-                st.markdown(f"<p style='color: #888; font-size: 12px;'>Data available for: {', '.join(month_options)}</p>", unsafe_allow_html=True)
+    # Search bar
+    st.markdown('<div class="search-container">', unsafe_allow_html=True)
+    search = st.text_input("", placeholder="🔍 Search stores by name...", label_visibility="collapsed")
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Load stores
+    stores = load_stores()
+    
+    # Filter stores based on search
+    if search:
+        filtered_stores = [store for store in stores if search.lower() in store['name'].lower()]
     else:
-        selected_month = None
-        # Show placeholder when no employee is selected
-        st.markdown("<p style='color: #888; font-size: 14px; margin-bottom: 8px;'>MONTH</p>", unsafe_allow_html=True)
-        st.markdown("<p style='color: #555; font-style: italic; font-size: 14px;'>Select an employee first</p>", unsafe_allow_html=True)
-
-# Filter data
-if employee_id:
-    # Filter by employee ID and selected month
-    if selected_month:
-        filtered_df = df[
-            (df['employee_id'] == employee_id) &
-            (df['month'].str.lower() == selected_month.lower())
-        ]
-    else:
-        # If no month is selected, show all data for the employee
-        filtered_df = df[df['employee_id'] == employee_id]
-
-    if not filtered_df.empty:
-        # First row: OJT Score
-        st.markdown("<h3 class='halo-font' style='font-size: 1.5rem; margin-top: 0;'>OJT Score</h3>", unsafe_allow_html=True)
-        m1, m2, m3 = st.columns(3)
+        filtered_stores = stores
+    
+    # Create a container for the store cards grid
+    st.markdown('<div style="margin-top: 50px;">', unsafe_allow_html=True)
+    
+    # Create a layout with 2 columns - left column for grid (75% width) and right column empty (25% width)
+    # This pushes the content to the left side of the page
+    left_col, _ = st.columns([3, 1])
+    
+    with left_col:
+        # Chunk the stores list into groups of 3 for the grid
+        store_chunks = [filtered_stores[i:i+3] for i in range(0, len(filtered_stores), 3)]
         
-        with m1:
-            st.metric("TOTAL MARKS", f"{filtered_df['total_marks'].iloc[0]:.1f}/4.0")
+        # For each row of stores
+        for chunk in store_chunks:
+            # Create 3 columns for the stores in this row
+            cols = st.columns(3)
+            
+            # For each store in this row
+            for i, store in enumerate(chunk):
+                with cols[i]:
+                    # Store card
+                    st.markdown(f"""
+                        <div class="store-card">
+                            <div class="store-name">{store['name']}</div>
+                            <div class="store-id">ID: {store['store_id']}</div>
+                        </div>
+                    """, unsafe_allow_html=True)
+                    
+                    # View Analytics button
+                    if st.button("View Analytics", key=f"view_{store['store_id']}", use_container_width=True):
+                        st.session_state.store_id = store['store_id']
+                        st.session_state.store_name = store['name']
+                        st.rerun()
+    
+    st.markdown('</div>', unsafe_allow_html=True)
 
-        with m2:
-            st.metric("TRAINER GRADE", f"{filtered_df['trainer_grade'].iloc[0]:.1f}/4.0")
-
-        with m3:
-            st.metric("TRAINING COUNT", int(filtered_df['training_count'].iloc[0]))
+def show_store_detail(store_id):
+    # Get store name
+    store_name = st.session_state.get('store_name', 'Store')
+    
+    # Back button with custom styling - translucent glass effect
+    if st.button("← Back", key="back_button"):
+        st.session_state.store_id = None
+        st.rerun()
+    
+    # Header with logo and store name
+    try:
+        logo = Image.open('src/assets/drivex-logo.png')
+        logo_bytes = io.BytesIO()
+        logo.save(logo_bytes, format='PNG')
+        logo_base64 = base64.b64encode(logo_bytes.getvalue()).decode()
         
-        # Second row: Status
-        st.markdown("<div style='height: 1.5rem;'></div>", unsafe_allow_html=True)
-        status = filtered_df['status'].iloc[0]
+        st.markdown(f"""
+            <div style="display: flex; align-items: center; margin-top: 0.5rem; margin-bottom: 0.5rem;">
+                <img src="data:image/png;base64,{logo_base64}" alt="DriveX Logo" width="100">
+                <h2 style="margin-left: 1rem; font-family: var(--title-font); font-size: 1.5rem;">{store_name}</h2>
+            </div>
+        """, unsafe_allow_html=True)
+    except Exception as e:
+        st.markdown(f"""
+            <div style="display: flex; align-items: center; margin-top: 0.5rem; margin-bottom: 0.5rem;">
+                <h2 style="font-family: var(--title-font); font-size: 1.5rem;">{store_name}</h2>
+            </div>
+        """, unsafe_allow_html=True)
+    
+    # Create a container for the date input with custom styling - with label
+    st.markdown('<div style="display: flex; align-items: center; margin-bottom: 0.5rem;">', unsafe_allow_html=True)
+    st.markdown('<span style="margin-right: 10px; font-size: 0.9rem; color: #888; font-family: var(--title-font); text-transform: uppercase; letter-spacing: 0.5px;">DATE:</span>', unsafe_allow_html=True)
+    date_col, _ = st.columns([3, 7])
+    with date_col:
+        selected_date = st.date_input("", datetime.now(), label_visibility="collapsed")
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Format date for API call
+    formatted_date = selected_date.strftime("%Y-%m-%d")
+    
+    # Fetch metrics
+    metrics = fetch_store_metrics(store_id, formatted_date)
+    
+    # Section divider
+    st.markdown('<hr style="border: 0; height: 1px; background: rgba(75, 0, 130, 0.7); margin: 0.5rem 0;">', unsafe_allow_html=True)
+    
+    # Display total visitors
+    st.markdown('<p style="margin-top: 0.5rem; margin-bottom: 0.25rem; font-family: var(--title-font); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px; color: #888;">UNIQUE VISITORS</p>', unsafe_allow_html=True)
+    st.markdown(f"""
+        <div class="visitor-count">{metrics['total_visitors']}</div>
+        <div class="visitor-date">↑ on {selected_date.strftime("%B %d, %Y")}</div>
+    """, unsafe_allow_html=True)
+    
+    # Section divider
+    st.markdown('<hr style="border: 0; height: 1px; background: rgba(75, 0, 130, 0.7); margin: 0.5rem 0;">', unsafe_allow_html=True)
+    
+    # Visitor count breakdown
+    st.markdown('<h3 class="section-title" style="font-size: 1.5rem;">VISITOR COUNT BREAKDOWN</h3>', unsafe_allow_html=True)
+    
+    # Create columns for table and chart
+    col1, col2 = st.columns([1, 2])
+    
+    with col1:
+        # Create table
+        st.markdown("""
+            <table class="styled-table">
+                <thead>
+                    <tr>
+                        <th>Time Interval</th>
+                        <th>Count</th>
+                    </tr>
+                </thead>
+                <tbody>
+        """, unsafe_allow_html=True)
         
-        # Center the status indicator
-        _, status_col, _ = st.columns([1, 2, 1])
-        with status_col:
+        for interval, count in metrics['hourly_breakdown'].items():
             st.markdown(f"""
-                <div style='background: var(--card-bg); border-radius: 10px; text-align: center; padding: 1.5rem;'>
-                    <p style='color: #888; font-size: 14px; margin-bottom: 8px;'>STATUS</p>
-                    <div class='status-{status.lower()}'>{status}</div>
-                </div>
+                <tr>
+                    <td>{interval}</td>
+                    <td>{count}</td>
+                </tr>
             """, unsafe_allow_html=True)
         
-        # Third row: Absenteeism
-        st.markdown("<div style='height: 2rem;'></div>", unsafe_allow_html=True)
-        st.markdown("<h3 class='halo-font' style='font-size: 1.5rem;'>Absenteeism</h3>", unsafe_allow_html=True)
-        ul_pl_1, ul_pl_2, ul_pl_3 = st.columns(3)
-        
-        with ul_pl_1:
-            st.metric("UL (Upper Limit)", filtered_df['ul'].iloc[0])
-        
-        with ul_pl_2:
-            st.metric("PL (Production Limit)", filtered_df['pl'].iloc[0])
-        
-        with ul_pl_3:
-            month_value = filtered_df['month'].iloc[0]
-            month_display = month_value.capitalize() if isinstance(month_value, str) else "N/A"
-            st.metric("Month", month_display)
-        
-        # Fourth row: Line Loss Count
-        st.markdown("<div style='height: 2rem;'></div>", unsafe_allow_html=True)
-        st.markdown("<h3 class='halo-font' style='font-size: 1.5rem;'>Line Loss Count</h3>", unsafe_allow_html=True)
-        
-        # Use 3 columns with the middle one empty to reduce the gap
-        zone_1, _, zone_2 = st.columns([1, 0.2, 1])
-        
-        with zone_1:
-            st.metric("Zone", int(filtered_df['zone'].iloc[0]))
-        
-        with zone_2:
-            st.metric("Line Loss/Month", filtered_df['line_loss'].iloc[0])
-        
-        # Fifth row: Associate Error
-        st.markdown("<div style='height: 2rem;'></div>", unsafe_allow_html=True)
-        st.markdown("<h3 class='halo-font' style='font-size: 1.5rem;'>Associate Error</h3>", unsafe_allow_html=True)
-        err_1, err_2, err_3 = st.columns(3)
-        
-        with err_1:
-            st.metric("Error Count", int(filtered_df['error_count'].iloc[0]))
-        
-        with err_2:
-            st.metric("Unsafe Acts Reported", int(filtered_df['unsafe_act_reported'].iloc[0]))
-        
-        with err_3:
-            st.metric("Unsafe Acts Responsible", int(filtered_df['unsafe_act_responsible'].iloc[0]))
-        
-        # Sixth row: Performance Credits
-        st.markdown("<div style='height: 2rem;'></div>", unsafe_allow_html=True)
-        st.markdown("<h3 class='halo-font' style='font-size: 1.5rem;'>Performance Credits</h3>", unsafe_allow_html=True)
-        cred_1, cred_2, cred_3 = st.columns(3)
-        
-        with cred_1:
-            st.metric("Kaizen Responsible", int(filtered_df['kaizen_responsible'].iloc[0]))
-        
-        with cred_2:
-            st.metric("Flexibility Credit", int(filtered_df['flexibility_credit'].iloc[0]))
-        
-        with cred_3:
-            st.metric("Teamwork Credit", int(filtered_df['teamwork_credit'].iloc[0]))
-            
-        # Add a note about the scoring system at the bottom of all metrics
-        st.markdown("<div style='height: 2rem;'></div>", unsafe_allow_html=True)
-        st.markdown("<p style='color: #888; font-size: 12px; text-align: center; margin-top: 10px;'>* Scores are rated on a scale of 0-4, with 4 being the highest.</p>", unsafe_allow_html=True)
+        st.markdown("""
+                </tbody>
+            </table>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        # Create chart
+        chart_data = pd.DataFrame({
+            'Time': list(metrics['hourly_breakdown'].keys()),
+            'Count': list(metrics['hourly_breakdown'].values())
+        })
+        st.bar_chart(chart_data.set_index('Time'), height=320)
+    
+    # Section divider
+    st.markdown('<hr style="border: 0; height: 1px; background: rgba(75, 0, 130, 0.7); margin: 0.5rem 0;">', unsafe_allow_html=True)
+    
+    # Analytics section
+    st.markdown('<h3 class="section-title" style="font-size: 1.5rem;">ANALYTICS</h3>', unsafe_allow_html=True)
+    
+    # Create analytics cards
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        st.markdown(f"""
+            <div class="analytics-card">
+                <div class="analytics-title">Unique Visitors</div>
+                <div class="analytics-value">{metrics['analytics']['unique_visitors']}</div>
+            </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown(f"""
+            <div class="analytics-card">
+                <div class="analytics-title">Test Ride Count</div>
+                <div class="analytics-value">{metrics['analytics']['test_ride_count']}</div>
+            </div>
+        """, unsafe_allow_html=True)
+    
+    with col3:
+        st.markdown(f"""
+            <div class="analytics-card">
+                <div class="analytics-title">QR Code Count</div>
+                <div class="analytics-value">{metrics['analytics']['qr_code_count']}</div>
+            </div>
+        """, unsafe_allow_html=True)
+    
+    with col4:
+        st.markdown(f"""
+            <div class="analytics-card">
+                <div class="analytics-title">Callstore Count</div>
+                <div class="analytics-value">{metrics['analytics']['callstore_count']}</div>
+            </div>
+        """, unsafe_allow_html=True)
+    
+    # Section divider
+    st.markdown('<hr style="border: 0; height: 1px; background: rgba(75, 0, 130, 0.7); margin: 0.5rem 0;">', unsafe_allow_html=True)
+    
+    # Last updated
+    st.markdown(f"""
+        <div class="last-updated">Last updated: {metrics['last_updated']}</div>
+    """, unsafe_allow_html=True)
+
+# Run the app
+if __name__ == "__main__":
+    main()
