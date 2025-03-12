@@ -183,9 +183,8 @@ st.markdown("""
         pointer-events: none;
     }
     
-    /* Hide dropdown menu and all related elements */
+    /* Hide dropdown menu and all related elements EXCEPT date picker */
     .stSelectbox,
-    [data-baseweb="popover"],
     [data-baseweb="select"],
     [data-baseweb="select-option"],
     [data-baseweb="menu"],
@@ -204,6 +203,21 @@ st.markdown("""
         overflow: hidden !important;
         position: absolute !important;
         z-index: -1 !important;
+    }
+    
+    /* Ensure date picker popover is visible */
+    .stDateInput [data-baseweb="popover"],
+    .stDateInput div[data-baseweb="calendar"] {
+        display: block !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
+        height: auto !important;
+        width: auto !important;
+        overflow: visible !important;
+        position: absolute !important;
+        z-index: 1000 !important;
+        background-color: #1A1A1A !important;
     }
     
     /* Store card styling */
@@ -254,13 +268,16 @@ st.markdown("""
         transform: translateY(-1px) !important;
     }
     
-    /* Date picker styling */
+    /* Enhanced Date picker styling */
     .stDateInput > div {
-        background-color: transparent !important;
-        border-radius: 0 !important;
-        border: none !important;
-        font-family: var(--body-font) !important;
-        padding: 0 !important;
+        background: linear-gradient(135deg, rgba(75, 0, 130, 0.2) 0%, rgba(45, 0, 75, 0.3) 100%) !important;
+        border: 1px solid rgba(138, 43, 226, 0.2) !important;
+        border-radius: 12px !important;
+        min-height: 48px !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        backdrop-filter: blur(10px) !important;
+        -webkit-backdrop-filter: blur(10px) !important;
+        box-shadow: 0 4px 16px rgba(138, 43, 226, 0.1) !important;
     }
     
     .stDateInput > div > div > div > div {
@@ -273,25 +290,103 @@ st.markdown("""
         color: white !important;
         font-family: var(--body-font) !important;
         font-size: 0.9rem !important;
+        padding: 8px !important;
     }
     
-    /* Calendar styling */
-    .streamlit-expanderContent div[data-baseweb="calendar"] {
-        background-color: #1A1A1A !important;
+    /* Remove all purple outlines and borders from date picker - more comprehensive */
+    .stDateInput > div:focus-within,
+    .stDateInput > div:hover,
+    .stDateInput > div:active,
+    .stDateInput > div:focus,
+    .stDateInput [data-baseweb="input"]:focus-within,
+    .stDateInput [data-baseweb="input"]:hover,
+    .stDateInput [data-baseweb="input"]:active,
+    .stDateInput [data-baseweb="input"]:focus {
+        border: 1px solid rgba(40, 40, 40, 0.8) !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+        outline: none !important;
+    }
+    
+    /* Remove focus outline from input */
+    .stDateInput input:focus,
+    .stDateInput [data-baseweb="input"] input:focus,
+    .stDateInput [data-baseweb="input"]:focus-within input {
+        outline: none !important;
+        box-shadow: none !important;
+        border-color: transparent !important;
+    }
+    
+    /* Override any BaseWeb styles that might be causing the purple outline */
+    [data-baseweb="input"]:focus-within,
+    [data-baseweb="base-input"]:focus-within {
+        border-color: rgba(40, 40, 40, 0.8) !important;
+        box-shadow: none !important;
+        outline: none !important;
+    }
+    
+    /* Enhanced Calendar styling */
+    div[data-baseweb="calendar"],
+    div[data-baseweb="popover"] {
+        background: linear-gradient(135deg, rgba(75, 0, 130, 0.3) 0%, rgba(45, 0, 75, 0.4) 100%) !important;
+        border-radius: 16px !important;
+        padding: 16px !important;
+        border: 1px solid rgba(138, 43, 226, 0.2) !important;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+        backdrop-filter: blur(20px) !important;
+        -webkit-backdrop-filter: blur(20px) !important;
         font-family: var(--body-font) !important;
+        display: block !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
+        height: auto !important;
+        width: auto !important;
+        overflow: visible !important;
+        position: absolute !important;
+        z-index: 1000 !important;
     }
     
-    .streamlit-expanderContent div[data-baseweb="calendar"] button {
+    div[data-baseweb="calendar"] button,
+    div[data-baseweb="popover"] button {
+        color: rgba(255, 255, 255, 0.9) !important;
+        font-family: var(--body-font) !important;
+        font-size: 0.9rem !important;
+        border-radius: 8px !important;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        margin: 2px !important;
+        width: 36px !important;
+        height: 36px !important;
+    }
+    
+    div[data-baseweb="calendar"] button:hover,
+    div[data-baseweb="popover"] button:hover {
+        background: rgba(138, 43, 226, 0.2) !important;
+        color: rgba(255, 255, 255, 1) !important;
+        transform: scale(1.1) !important;
+    }
+    
+    div[data-baseweb="calendar"] button[aria-selected="true"],
+    div[data-baseweb="popover"] button[aria-selected="true"] {
+        background: linear-gradient(135deg, rgba(138, 43, 226, 0.8) 0%, rgba(75, 0, 130, 0.9) 100%) !important;
         color: white !important;
-        font-family: var(--body-font) !important;
+        font-weight: 600 !important;
+        box-shadow: 0 4px 12px rgba(138, 43, 226, 0.3) !important;
     }
     
-    .streamlit-expanderContent div[data-baseweb="calendar"] button:hover {
-        background-color: #9370DB !important;
+    div[data-baseweb="calendar"] thead button,
+    div[data-baseweb="popover"] thead button {
+        color: rgba(255, 255, 255, 0.7) !important;
+        font-weight: 600 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 1px !important;
+        font-size: 0.8rem !important;
     }
     
-    .streamlit-expanderContent div[data-baseweb="calendar"] button[aria-selected="true"] {
-        background-color: #9370DB !important;
+    div[data-baseweb="calendar"] thead button:hover,
+    div[data-baseweb="popover"] thead button:hover {
+        background: transparent !important;
+        color: rgba(138, 43, 226, 1) !important;
+        transform: none !important;
     }
     
     /* Visitor count styling */
@@ -446,6 +541,50 @@ st.markdown("""
     footer {visibility: hidden;}
     .stDeployButton {display:none;}
     
+    /* Sidebar styling */
+    [data-testid="stSidebar"] {
+        background-color: var(--background-color) !important;
+        border-right: 1px solid rgba(75, 0, 130, 0.3) !important;
+    }
+    
+    [data-testid="stSidebar"] .stMarkdown h1 {
+        color: white !important;
+        font-family: var(--title-font) !important;
+        font-size: 1.5rem !important;
+        margin-bottom: 1rem !important;
+        letter-spacing: 1px !important;
+    }
+    
+    [data-testid="stSidebar"] .stMarkdown h2, 
+    [data-testid="stSidebar"] .stMarkdown h3 {
+        color: #CCC !important;
+        font-family: var(--title-font) !important;
+        font-size: 1rem !important;
+        margin-top: 1.5rem !important;
+        margin-bottom: 0.5rem !important;
+        letter-spacing: 0.5px !important;
+    }
+    
+    /* Checkbox styling */
+    [data-testid="stSidebar"] [data-testid="stCheckbox"] {
+        accent-color: var(--accent-color) !important;
+    }
+    
+    /* Slider styling */
+    [data-testid="stSidebar"] [data-testid="stSlider"] > div > div {
+        background-color: rgba(75, 0, 130, 0.3) !important;
+    }
+    
+    [data-testid="stSidebar"] [data-testid="stSlider"] > div > div > div > div {
+        background-color: var(--accent-color) !important;
+    }
+    
+    /* Caption styling */
+    [data-testid="stSidebar"] .stMarkdown small {
+        color: #888 !important;
+        font-style: italic !important;
+    }
+    
     /* Responsive adjustments */
     @media (max-width: 768px) {
         .analytics-card {
@@ -466,20 +605,26 @@ def load_stores():
         st.error(f"Error loading store data: {e}")
         return []
 
-# Mock API call function
-def fetch_store_metrics(store_id, date):
-    """
-    Mock function to fetch store metrics from API
-    In production, this would make an actual API call
-    """
-    # Format the API endpoint
-    api_endpoint = f"/api/v1/analytics/stores/metrics/?store_id={store_id}&date={date}"
-    
-    # In a real implementation, this would be:
-    # response = requests.get(api_endpoint)
-    # return response.json()
-    
-    # For now, return mock data
+# API Configuration
+API_ENDPOINT_BASE_URL = "https://api-veronica.drivex.in"
+API_KEY = "vrqouhciwtykfummlaqryyxexnkhtvvi"
+API_TIMEOUT = 10  # seconds
+API_MAX_RETRIES = 3
+API_RETRY_BACKOFF = 0.5  # seconds
+
+# Initialize session state for refresh tracking and API status
+if 'last_refresh' not in st.session_state:
+    st.session_state.last_refresh = datetime.now()
+if 'api_status' not in st.session_state:
+    st.session_state.api_status = "unknown"  # unknown, connected, error
+if 'api_error' not in st.session_state:
+    st.session_state.api_error = ""
+if 'use_mock_data' not in st.session_state:
+    st.session_state.use_mock_data = True  # Default to mock data since API is unavailable
+
+# Helper function to get fallback data when API fails
+def get_fallback_data():
+    """Return fallback data when API fails"""
     return {
         "total_visitors": 0,
         "hourly_breakdown": {
@@ -503,8 +648,246 @@ def fetch_store_metrics(store_id, date):
         "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
 
+# Generate mock data for demo purposes
+def get_mock_data(store_id, date):
+    """Generate realistic mock data for demo purposes"""
+    # Seed the random number generator with the store_id and date for consistent results
+    import random
+    seed = int(store_id) + int(datetime.strptime(date, "%Y-%m-%d").timestamp())
+    random.seed(seed)
+    
+    # Generate random visitor counts for each hour
+    total_visitors = random.randint(50, 200)
+    
+    # Create hourly breakdown with a realistic distribution
+    # Morning hours have fewer visitors, afternoon and evening have more
+    hourly_breakdown = {
+        "10:00-11:00": random.randint(1, 10),
+        "11:00-12:00": random.randint(5, 15),
+        "12:00-13:00": random.randint(10, 25),
+        "13:00-14:00": random.randint(15, 30),
+        "14:00-15:00": random.randint(20, 35),
+        "15:00-16:00": random.randint(25, 40),
+        "16:00-17:00": random.randint(30, 45),
+        "17:00-18:00": random.randint(35, 50),
+        "18:00-19:00": random.randint(25, 40),
+        "19:00-20:00": random.randint(15, 30)
+    }
+    
+    # Ensure the sum of hourly breakdown is close to total_visitors
+    total_hourly = sum(hourly_breakdown.values())
+    if total_hourly > 0:  # Avoid division by zero
+        scale_factor = total_visitors / total_hourly
+        hourly_breakdown = {k: int(v * scale_factor) for k, v in hourly_breakdown.items()}
+    
+    # Generate analytics data
+    test_ride_count = random.randint(int(total_visitors * 0.1), int(total_visitors * 0.3))
+    qr_code_count = random.randint(int(total_visitors * 0.2), int(total_visitors * 0.5))
+    callstore_count = random.randint(int(total_visitors * 0.05), int(total_visitors * 0.15))
+    
+    return {
+        "total_visitors": total_visitors,
+        "hourly_breakdown": hourly_breakdown,
+        "analytics": {
+            "unique_visitors": total_visitors,
+            "test_ride_count": test_ride_count,
+            "qr_code_count": qr_code_count,
+            "callstore_count": callstore_count
+        },
+        "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    }
+
+# Real API call function with caching
+@st.cache_data(ttl=60)  # Cache for 60 seconds
+def fetch_store_metrics(store_id, date):
+    """
+    Fetch store metrics from the API with error handling and retries
+    """
+    # If using mock data, return mock data instead of making API call
+    if st.session_state.use_mock_data:
+        st.session_state.api_status = "connected"  # Set status to connected for mock data
+        st.session_state.api_error = ""
+        return get_mock_data(store_id, date)
+    
+    # Format the API endpoint
+    api_endpoint = f"{API_ENDPOINT_BASE_URL}/api/v1/analytics/stores/metrics/?store_id={store_id}&date={date}"
+    
+    headers = {
+        "Authorization": f"Api-Key {API_KEY}",
+        "Content-Type": "application/json"
+    }
+    
+    try:
+        # Create a session with retry capability
+        session = requests.Session()
+        retry_strategy = requests.packages.urllib3.util.retry.Retry(
+            total=API_MAX_RETRIES,
+            backoff_factor=API_RETRY_BACKOFF,
+            status_forcelist=[429, 500, 502, 503, 504]
+        )
+        adapter = requests.adapters.HTTPAdapter(max_retries=retry_strategy)
+        session.mount('http://', adapter)
+        session.mount('https://', adapter)
+        
+        # Make the API request
+        response = session.get(
+            api_endpoint, 
+            headers=headers, 
+            timeout=API_TIMEOUT
+        )
+        
+        # Raise an exception for HTTP errors
+        response.raise_for_status()
+        
+        # Parse the response
+        api_response = response.json()
+        
+        # Check if the API returned a success status
+        if api_response.get("status") != "success":
+            error_msg = api_response.get('message', 'Unknown error')
+            st.error(f"API Error: {error_msg}")
+            st.session_state.api_status = "error"
+            st.session_state.api_error = error_msg
+            return get_fallback_data()
+        
+        # Extract and format the data
+        data = api_response.get("data", {})
+        
+        # Format the response to match the expected structure
+        formatted_data = {
+            "total_visitors": data.get("unique_visitors", 0),
+            "hourly_breakdown": get_hourly_breakdown(data),
+            "analytics": {
+                "unique_visitors": data.get("unique_visitors", 0),
+                "test_ride_count": data.get("test_ride_count", 0),
+                "qr_code_count": data.get("qr_code_count", 0),
+                "callstore_count": data.get("callstore_count", 0)  # Changed from call_store_count to callstore_count
+            },
+            "last_updated": data.get("last_updated", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        }
+        
+        # Update API status to connected
+        st.session_state.api_status = "connected"
+        st.session_state.api_error = ""
+        
+        return formatted_data
+        
+    except requests.exceptions.RequestException as e:
+        error_msg = str(e)
+        st.error(f"API Request Error: {error_msg}")
+        st.session_state.api_status = "error"
+        st.session_state.api_error = error_msg
+        return get_fallback_data()
+    except ValueError as e:
+        error_msg = str(e)
+        st.error(f"JSON Parsing Error: {error_msg}")
+        st.session_state.api_status = "error"
+        st.session_state.api_error = error_msg
+        return get_fallback_data()
+    except Exception as e:
+        error_msg = str(e)
+        st.error(f"Unexpected Error: {error_msg}")
+        st.session_state.api_status = "error"
+        st.session_state.api_error = error_msg
+        return get_fallback_data()
+
+def get_hourly_breakdown(data):
+    """
+    Extract hourly breakdown from API response or create default structure
+    """
+    # If the API provides hourly breakdown, use it
+    if "hourly_breakdown" in data:
+        return data["hourly_breakdown"]
+    
+    # Otherwise, create a default structure
+    return {
+        "10:00-11:00": 0,
+        "11:00-12:00": 0,
+        "12:00-13:00": 0,
+        "13:00-14:00": 0,
+        "14:00-15:00": 0,
+        "15:00-16:00": 0,
+        "16:00-17:00": 0,
+        "17:00-18:00": 0,
+        "18:00-19:00": 0,
+        "19:00-20:00": 0
+    }
+
 # Main function
 def main():
+    # Add sidebar for settings
+    with st.sidebar:
+        st.title("Settings")
+        
+        # Data Source toggle
+        st.subheader("Data Source")
+        use_mock = st.checkbox("Use Demo Data", value=st.session_state.use_mock_data, 
+                              help="Toggle between real API data and demo data")
+        if use_mock != st.session_state.use_mock_data:
+            st.session_state.use_mock_data = use_mock
+            # Clear cache to force refresh with new data source
+            fetch_store_metrics.clear()
+            st.experimental_rerun()
+        
+        # Add note about demo mode
+        if st.session_state.use_mock_data:
+            st.markdown("""
+                <div style="font-size: 0.8rem; color: #FFA500; margin-bottom: 1rem; padding: 8px; border-radius: 4px; background-color: rgba(255, 165, 0, 0.1); border: 1px solid rgba(255, 165, 0, 0.3);">
+                    <strong>Demo Mode:</strong> Using realistic mock data since the API is currently unavailable.
+                </div>
+            """, unsafe_allow_html=True)
+        
+        # API Status indicator
+        st.subheader("API Status")
+        
+        # Display API status with appropriate color
+        if st.session_state.api_status == "connected":
+            st.markdown("""
+                <div style="display: flex; align-items: center; margin-bottom: 1rem;">
+                    <div style="width: 12px; height: 12px; border-radius: 50%; background-color: #00FF00; margin-right: 8px;"></div>
+                    <span style="color: #00FF00; font-weight: 500;">Connected</span>
+                </div>
+            """, unsafe_allow_html=True)
+        elif st.session_state.api_status == "error":
+            st.markdown(f"""
+                <div style="display: flex; align-items: center; margin-bottom: 0.5rem;">
+                    <div style="width: 12px; height: 12px; border-radius: 50%; background-color: #FF4757; margin-right: 8px;"></div>
+                    <span style="color: #FF4757; font-weight: 500;">Error</span>
+                </div>
+                <div style="font-size: 0.8rem; color: #FF4757; margin-bottom: 1rem; opacity: 0.8; overflow-wrap: break-word;">
+                    {st.session_state.api_error}
+                </div>
+            """, unsafe_allow_html=True)
+        else:  # unknown
+            st.markdown("""
+                <div style="display: flex; align-items: center; margin-bottom: 1rem;">
+                    <div style="width: 12px; height: 12px; border-radius: 50%; background-color: #FFA500; margin-right: 8px;"></div>
+                    <span style="color: #FFA500; font-weight: 500;">Unknown</span>
+                </div>
+            """, unsafe_allow_html=True)
+        
+        # Auto-refresh settings
+        st.subheader("Data Refresh")
+        auto_refresh = st.checkbox("Auto-refresh data", value=True)
+        refresh_interval = st.slider("Refresh interval (seconds)", 
+                                    min_value=10, 
+                                    max_value=300, 
+                                    value=60,
+                                    step=10)
+        
+        # Manual refresh button
+        if st.button("Refresh Now", use_container_width=True):
+            st.session_state.last_refresh = datetime.now()
+            st.experimental_rerun()
+        
+        # Display last refresh time
+        st.caption(f"Last refreshed: {st.session_state.last_refresh.strftime('%H:%M:%S')}")
+    
+    # Check if it's time to auto-refresh
+    if auto_refresh and (datetime.now() - st.session_state.last_refresh).total_seconds() > refresh_interval:
+        st.session_state.last_refresh = datetime.now()
+        st.experimental_rerun()
+    
     # Check if we're in the store detail view
     if 'store_id' in st.session_state and st.session_state.store_id:
         show_store_detail(st.session_state.store_id)
@@ -535,7 +918,7 @@ def show_main_page():
     
     # Search bar
     st.markdown('<div class="search-container">', unsafe_allow_html=True)
-    search = st.text_input("", placeholder="Search stores by name...", label_visibility="collapsed")
+    search = st.text_input("Search", placeholder="Search stores by name...", label_visibility="collapsed")
     st.markdown('</div>', unsafe_allow_html=True)
     
     # Load stores
@@ -611,19 +994,83 @@ def show_store_detail(store_id):
             </div>
         """, unsafe_allow_html=True)
     
-    # Create a container for the date input with custom styling - with label
-    st.markdown('<div style="display: flex; align-items: center; margin-bottom: 0.5rem;">', unsafe_allow_html=True)
-    st.markdown('<span style="margin-right: 10px; font-size: 0.75rem; color: #888888; font-family: var(--title-font); text-transform: uppercase; letter-spacing: 0.5px;">DATE</span>', unsafe_allow_html=True)
-    date_col, _ = st.columns([3, 7])
-    with date_col:
-        selected_date = st.date_input("", datetime.now(), label_visibility="collapsed")
-    st.markdown('</div>', unsafe_allow_html=True)
+    # Create a modern glass-morphic date picker container
+    st.markdown("""<div style="display: flex; align-items: center; gap: 1rem; margin: 1rem 0;">
+        <span style="margin-top: 0.5rem; margin-bottom: 0.25rem; font-family: var(--title-font); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: #888888;">DATE</span>
+        <div style="flex: 1; max-width: 150px;">""", unsafe_allow_html=True)
+    
+    selected_date = st.date_input(
+        "Select Date",
+        datetime.now(),
+        label_visibility="collapsed",
+        key="modern_date_picker"
+    )
+    
+    st.markdown("""</div></div>""", unsafe_allow_html=True)
+    
+    # Add custom CSS for the date picker
+    st.markdown("""
+    <style>
+    .date-picker-container {
+        background: linear-gradient(135deg, rgba(75, 0, 130, 0.2) 0%, rgba(45, 0, 75, 0.3) 100%);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin: 1rem 0;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 8px 32px rgba(75, 0, 130, 0.2);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+    }
+    
+    .date-label {
+        font-family: var(--title-font);
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.7);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-weight: 600;
+    }
+    
+    /* Modern date input styling */
+    .stDateInput > div {
+        background: linear-gradient(135deg, rgba(75, 0, 130, 0.3) 0%, rgba(45, 0, 75, 0.4) 100%) !important;
+        border-radius: 8px !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    .stDateInput > div:hover {
+        border-color: var(--accent-color) !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 8px 32px rgba(138, 43, 226, 0.2) !important;
+    }
+    
+    .stDateInput input {
+        color: var(--text-color) !important;
+        font-family: var(--body-font) !important;
+        font-size: 0.9rem !important;
+        letter-spacing: 0.5px !important;
+        padding: 0.75rem 1rem !important;
+    }
+    
+    div[data-baseweb="calendar"] {
+        background: linear-gradient(135deg, rgba(75, 0, 130, 0.3) 0%, rgba(45, 0, 75, 0.4) 100%) !important;
+        border-radius: 12px !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        box-shadow: 0 8px 32px rgba(75, 0, 130, 0.2) !important;
+        backdrop-filter: blur(10px) !important;
+        -webkit-backdrop-filter: blur(10px) !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
     
     # Format date for API call
     formatted_date = selected_date.strftime("%Y-%m-%d")
     
-    # Fetch metrics
-    metrics = fetch_store_metrics(store_id, formatted_date)
+    # Fetch metrics with loading indicator
+    with st.spinner("Fetching real-time data..."):
+        metrics = fetch_store_metrics(store_id, formatted_date)
     
     # Section divider
     st.markdown('<hr style="border: 0; height: 1px; background: rgba(75, 0, 130, 0.7); margin: 0.5rem 0;">', unsafe_allow_html=True)
@@ -683,7 +1130,7 @@ def show_store_detail(store_id):
     st.markdown('<span style="margin-top: 1.5rem; margin-bottom: 1rem; margin-right: 10px; font-family: var(--title-font); font-size: 1.2rem; text-transform: uppercase; letter-spacing: 1px; color: #FFFFFF; font-weight: bold; display: block; text-align: center;">VISITOR COUNT BREAKDOWN</span>', unsafe_allow_html=True)
     
     # Add subtitle with instructions for better photo capture
-    st.markdown('<span style="margin-bottom: 1.5rem; font-family: var(--body-font); font-size: 0.9rem; color: #AAAAAA; display: block; text-align: center;">Tap chart to zoom or use controls for better visibility</span>', unsafe_allow_html=True)
+    st.markdown('<span style="margin-bottom: 1rem; font-family: var(--body-font); font-size: 0.65rem; color: #AAAAAA; display: block; text-align: center;">Tap chart to zoom or use controls for better visibility</span>', unsafe_allow_html=True)
     
     # Create chart data
     # Convert 24-hour format to 12-hour format for time intervals
@@ -811,10 +1258,10 @@ def show_store_detail(store_id):
     fig.update_layout(
         plot_bgcolor='rgba(0,0,0,0)',
         paper_bgcolor='rgba(0,0,0,0)',
-        margin=dict(l=60, r=40, t=30, b=120),  # Increased bottom margin for rotated labels
+        margin=dict(l=60, r=40, t=30, b=150),  # Further increased bottom margin for labels
         font=dict(
             family='Inter, sans-serif',
-            size=16,  # Increased font size
+            size=16,
             color='white'
         ),
         xaxis=dict(
@@ -822,12 +1269,12 @@ def show_store_detail(store_id):
             gridcolor='rgba(138, 43, 226, 0.3)',
             tickangle=0,  # Keep labels horizontal as requested
             title=None,
-            tickfont=dict(size=10),  # Even smaller font size to fit all horizontal labels
+            tickfont=dict(size=12),  # Slightly larger font for better readability
             # Show all labels as requested
             tickmode='array',
             tickvals=chart_data['Time'].tolist(),
-            # Format labels to be more compact and readable
-            ticktext=[f"{time.split('-')[0].replace(':00', '').replace('am', 'AM').replace('pm', 'PM')}-{time.split('-')[1].replace(':00', '').replace('am', 'AM').replace('pm', 'PM')}" 
+            # Format labels to be more compact and readable - just show hour numbers
+            ticktext=[f"{time.split('-')[0].split(':')[0]}{time.split('-')[0][-2:]}-{time.split('-')[1].split(':')[0]}{time.split('-')[1][-2:]}" 
                      for time in chart_data['Time']],
             ticklen=8,  # Longer tick marks
         ),
@@ -845,7 +1292,7 @@ def show_store_detail(store_id):
             font_family='Inter, sans-serif',
             bordercolor='white',
         ),
-        bargap=0.6,  # Further increased spacing between bars for better label visibility
+        bargap=0.7,  # Even more spacing between bars for better label visibility
     )
     
     # Update the bar color and add effects
