@@ -897,7 +897,7 @@ def main():
         refresh_interval = st.slider("Refresh interval (seconds)", 
                                     min_value=10, 
                                     max_value=300, 
-                                    value=60,
+                                    value=10,
                                     step=10)
         
         # Manual refresh button
@@ -1189,80 +1189,130 @@ def show_store_detail(store_id):
     <style>
     /* Custom styling for the chart with glassy effect */
     .stChart > div > div > div {
-        background-color: black !important;
-        border-radius: 12px !important;
-        padding: 10px !important;
-        border: 1px solid rgba(138, 43, 226, 0.3) !important;
-        box-shadow: 0 8px 32px rgba(138, 43, 226, 0.2) !important;
-        backdrop-filter: blur(10px) !important;
-        -webkit-backdrop-filter: blur(10px) !important;
-    }
-    
-    /* Chart container with glass effect */
-    [data-testid="stChart"] {
-        background: linear-gradient(135deg, rgba(75, 0, 130, 0.2) 0%, rgba(45, 0, 75, 0.3) 100%) !important;
-        border-radius: 12px !important;
+        background: radial-gradient(circle at center, rgba(186, 85, 255, 0.15) 0%, rgba(0, 0, 0, 0.95) 100%) !important;
+        backdrop-filter: blur(20px) !important;
+        -webkit-backdrop-filter: blur(20px) !important;
+        border: 2px solid rgba(186, 85, 255, 0.3) !important;
+        box-shadow: 0 8px 32px rgba(186, 85, 255, 0.2), inset 0 0 64px rgba(138, 43, 226, 0.2) !important;
+        border-radius: 16px !important;
         padding: 20px !important;
-        border: 1px solid rgba(255, 255, 255, 0.08) !important;
-        box-shadow: 0 8px 32px rgba(75, 0, 130, 0.2) !important;
-        backdrop-filter: blur(10px) !important;
-        -webkit-backdrop-filter: blur(10px) !important;
-        margin-bottom: 20px !important;
+        margin: 10px 0 !important;
         position: relative !important;
         overflow: hidden !important;
+        transition: all 0.3s ease-out !important;
+        border-radius: 12px !important;
+        backdrop-filter: blur(7px) !important;
+        -webkit-backdrop-filter: blur(30px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        box-shadow: 0 8px 32px rgba(75, 0, 130, 0.2) !important;
     }
-    
-    /* Add subtle glow effect */
-    [data-testid="stChart"]::before {
-        content: "" !important;
-        position: absolute !important;
-        top: 0 !important;
-        left: 0 !important;
-        right: 0 !important;
-        bottom: 0 !important;
-        background: radial-gradient(circle at top right, rgba(138, 43, 226, 0.1), transparent 70%), 
-                  radial-gradient(circle at bottom left, rgba(75, 0, 130, 0.1), transparent 70%);
-        z-index: 0 !important;
-        pointer-events: none !important;
+
+    /* Bar chart customization */
+    .stChart > div > div > div > svg g path[fill="#8A2BE2"] {
+        fill: #BA55FF !important;
+        transition: all 0.3s ease-out !important;
+        filter: drop-shadow(0 0 15px rgba(186, 85, 255, 0.8)) drop-shadow(0 0 30px rgba(138, 43, 226, 0.6)) !important;
+        animation: neonPulse 1.5s ease-in-out infinite alternate !important;
     }
-    
-    /* Make axis labels white and improve readability */
+
+    /* Enhance chart text and axes */
     .stChart text {
-        fill: white !important;
+        fill: rgba(255, 255, 255, 0.9) !important;
         font-family: var(--body-font) !important;
-        font-size: 8px !important;
+        font-size: 12px !important;
         font-weight: 500 !important;
-        letter-spacing: -0.3px !important;
     }
-    
-    /* Ensure x-axis labels are horizontal and properly spaced */
-    .stChart .xaxislayer-above text {
-        text-anchor: middle !important;
-        transform: rotate(0deg) !important;
-        font-size: 8px !important;
-        letter-spacing: -0.3px !important;
-        margin: 0 8px !important;
-    }
-    
-    /* Make grid lines purple with glowing effect */
-    .stChart line {
-        stroke: rgba(138, 43, 226, 0.6) !important;
+
+    .stChart .axis line,
+    .stChart .axis path {
+        stroke: rgba(186, 85, 255, 0.4) !important;
         stroke-width: 1px !important;
-        filter: drop-shadow(0 0 2px rgba(138, 43, 226, 0.5)) !important;
+    }
+
+    .stChart .grid line {
+        stroke: rgba(186, 85, 255, 0.1) !important;
+        stroke-dasharray: 2,2 !important;
+    }
+
+    @keyframes neonPulse {
+        from {
+            filter: drop-shadow(0 0 15px rgba(186, 85, 255, 0.8)) drop-shadow(0 0 30px rgba(138, 43, 226, 0.6));
+            opacity: 1;
+        }
+        to {
+            filter: drop-shadow(0 0 25px rgba(186, 85, 255, 1)) drop-shadow(0 0 40px rgba(138, 43, 226, 0.8));
+            opacity: 0.8;
+        }
+    }
+
+    @keyframes glow {
+        from {
+            filter: drop-shadow(0 0 5px rgba(138, 43, 226, 0.5)) drop-shadow(0 0 10px rgba(138, 43, 226, 0.3));
+        }
+        to {
+            filter: drop-shadow(0 0 10px rgba(138, 43, 226, 0.8)) drop-shadow(0 0 20px rgba(138, 43, 226, 0.5));
+        }
+    }
+
+    .stChart > div > div > div > svg g path[fill="#8A2BE2"]:hover {
+        filter: drop-shadow(0 8px 16px rgba(138, 43, 226, 0.5)) !important;
+        transform: translateY(-2px) !important;
+    }
+
+    /* Add gradient definition */
+    .stChart > div > div > div > svg defs {
+        content: '<linearGradient id="purpleGradient" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:rgba(186, 85, 255, 1)"/><stop offset="50%" style="stop-color:rgba(138, 43, 226, 0.9)"/><stop offset="100%" style="stop-color:rgba(75, 0, 130, 0.8)"/></linearGradient>';
+    }
+
+    /* Enhanced glow effect */
+    .stChart > div > div > div > svg g path[fill="#8A2BE2"] {
+        filter: drop-shadow(0 0 10px rgba(186, 85, 255, 0.6)) drop-shadow(0 0 20px rgba(138, 43, 226, 0.4)) !important;
     }
     
-    /* Make the chart bars purple with gradient */
-    .stChart path.bar {
-        fill: url(#purpleGradient) !important;
-        stroke: rgba(255, 255, 255, 0.1) !important;
-        stroke-width: 1px !important;
-        filter: drop-shadow(0 0 3px rgba(138, 43, 226, 0.5)) !important;
+    /* Add glassy effect to chart bars */
+    .stChart rect {
+        fill: url(#glassGradient) !important;
+        opacity: 0.85 !important;
+        transition: all 0.3s ease !important;
     }
     
-    /* Ensure x-axis labels are horizontal and readable */
-    .stChart .xaxislayer-above text {
-        text-anchor: middle !important;
-        transform: rotate(0deg) !important;
+    .stChart rect:hover {
+        opacity: 1 !important;
+        filter: brightness(1.2) !important;
+    }
+    
+    /* Add gradient definition for glassy bars */
+    .stChart svg:first-of-type {
+        position: relative;
+    }
+    
+    .stChart svg:first-of-type:before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05)) !important;
+        pointer-events: none;
+        border-radius: 8px;
+    }
+    
+    /* Define gradient for bars */
+    .stChart defs {
+        position: absolute;
+    }
+    
+    .stChart defs linearGradient {
+        --bar-color: rgba(138, 43, 226, 0.7);
+        --highlight: rgba(255, 255, 255, 0.2);
+    }
+    
+    .stChart defs stop:first-child {
+        stop-color: var(--highlight);
+        stop-opacity: 0.4;
+    }
+    
+    .stChart defs stop:last-child {
+        stop-color: var(--bar-color);
+        stop-opacity: 0.8;
     }
     </style>
     ''', unsafe_allow_html=True)
