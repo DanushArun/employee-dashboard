@@ -1026,7 +1026,7 @@ def show_store_detail(store_id):
     
     selected_date = st.date_input(
         "Select Date",
-        datetime(2025, 3, 5),  # Set default date to March 5th, 2025
+        datetime.now(),  # Set default date to current date
         label_visibility="collapsed",
         key="modern_date_picker"
     )
