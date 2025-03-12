@@ -620,7 +620,7 @@ if 'api_status' not in st.session_state:
 if 'api_error' not in st.session_state:
     st.session_state.api_error = ""
 if 'use_mock_data' not in st.session_state:
-    st.session_state.use_mock_data = True  # Default to mock data since API is unavailable
+    st.session_state.use_mock_data = False  # Default to real API data
 
 # Helper function to get fallback data when API fails
 def get_fallback_data():
