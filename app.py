@@ -8,6 +8,7 @@ import os
 import io
 import base64
 from datetime import datetime, timedelta
+import config
 
 # Page config
 st.set_page_config(
@@ -605,12 +606,11 @@ def load_stores():
         st.error(f"Error loading store data: {e}")
         return []
 
-# API Configuration
-API_ENDPOINT_BASE_URL = "https://api-veronica.drivex.in"
-API_KEY = "vrqouhciwtykfummlaqryyxexnkhtvvi"
-API_TIMEOUT = 10  # seconds
-API_MAX_RETRIES = 3
-API_RETRY_BACKOFF = 0.5  # seconds
+API_ENDPOINT_BASE_URL = config.API_ENDPOINT_BASE_URL
+API_KEY = config.API_KEY
+API_TIMEOUT = config.API_TIMEOUT
+API_MAX_RETRIES = config.API_MAX_RETRIES
+API_RETRY_BACKOFF = config.API_RETRY_BACKOFF
 
 # Initialize session state for refresh tracking and API status
 if 'last_refresh' not in st.session_state:
@@ -709,11 +709,12 @@ def fetch_store_metrics(store_id, date):
         st.session_state.api_error = ""
         return get_mock_data(store_id, date)
     
-    # Format the API endpoint
-    api_endpoint = f"{API_ENDPOINT_BASE_URL}/api/v1/analytics/stores/metrics/?store_id={store_id}&date={date}"
+    # Format the API endpoint with from_date and to_date parameters (both set to the same date)
+    api_endpoint = f"{API_ENDPOINT_BASE_URL}/api/v1/analytics/stores/metrics/?store_id={store_id}&from_date={date}&to_date={date}"
     
+    # Use the X-API-Key header method for authentication
     headers = {
-        "Authorization": f"Api-Key {API_KEY}",
+        "X-API-Key": API_KEY,
         "Content-Type": "application/json"
     }
     
@@ -759,9 +760,9 @@ def fetch_store_metrics(store_id, date):
             "hourly_breakdown": get_hourly_breakdown(data),
             "analytics": {
                 "unique_visitors": data.get("unique_visitors", 0),
-                "test_ride_count": data.get("test_ride_count", 0),
-                "qr_code_count": data.get("qr_code_count", 0),
-                "callstore_count": data.get("callstore_count", 0)  # Changed from call_store_count to callstore_count
+                "test_ride_count": data.get("test_ride", 0),  # API field is test_ride
+                "qr_code_count": data.get("qr_code", 0),      # API field is qr_code
+                "callstore_count": data.get("call_store", 0)  # API field is call_store
             },
             "last_updated": data.get("last_updated", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         }
@@ -795,12 +796,8 @@ def get_hourly_breakdown(data):
     """
     Extract hourly breakdown from API response or create default structure
     """
-    # If the API provides hourly breakdown, use it
-    if "hourly_breakdown" in data:
-        return data["hourly_breakdown"]
-    
-    # Otherwise, create a default structure
-    return {
+    # Create a default structure with all hours set to 0
+    default_structure = {
         "10:00-11:00": 0,
         "11:00-12:00": 0,
         "12:00-13:00": 0,
@@ -812,6 +809,34 @@ def get_hourly_breakdown(data):
         "18:00-19:00": 0,
         "19:00-20:00": 0
     }
+    
+    # If the API provides hourly breakdown in the old format, use it
+    if "hourly_breakdown" in data:
+        return data["hourly_breakdown"]
+    
+    # If the API provides hourly data in the new format, convert it
+    if "hourly_data" in data:
+        hourly_data = data["hourly_data"]
+        result = default_structure.copy()
+        
+        # Map from API format (e.g., "10-11") to dashboard format (e.g., "10:00-11:00")
+        for hour_range, values in hourly_data.items():
+            if isinstance(values, list) and len(values) > 0:
+                # Extract the visitor count (first element in the list)
+                visitor_count = values[0]
+                
+                # Convert hour format: "10-11" -> "10:00-11:00"
+                start_hour, end_hour = hour_range.split("-")
+                formatted_hour_range = f"{start_hour}:00-{end_hour}:00"
+                
+                # Update the result with the actual value
+                if formatted_hour_range in result:
+                    result[formatted_hour_range] = visitor_count
+        
+        return result
+    
+    # Otherwise, return the default structure
+    return default_structure
 
 # Main function
 def main():
@@ -827,7 +852,7 @@ def main():
             st.session_state.use_mock_data = use_mock
             # Clear cache to force refresh with new data source
             fetch_store_metrics.clear()
-            st.experimental_rerun()
+            st.rerun()
         
         # Add note about demo mode
         if st.session_state.use_mock_data:
@@ -878,7 +903,7 @@ def main():
         # Manual refresh button
         if st.button("Refresh Now", use_container_width=True):
             st.session_state.last_refresh = datetime.now()
-            st.experimental_rerun()
+            st.rerun()
         
         # Display last refresh time
         st.caption(f"Last refreshed: {st.session_state.last_refresh.strftime('%H:%M:%S')}")
@@ -886,7 +911,7 @@ def main():
     # Check if it's time to auto-refresh
     if auto_refresh and (datetime.now() - st.session_state.last_refresh).total_seconds() > refresh_interval:
         st.session_state.last_refresh = datetime.now()
-        st.experimental_rerun()
+        st.rerun()
     
     # Check if we're in the store detail view
     if 'store_id' in st.session_state and st.session_state.store_id:
@@ -1001,7 +1026,7 @@ def show_store_detail(store_id):
     
     selected_date = st.date_input(
         "Select Date",
-        datetime.now(),
+        datetime(2025, 3, 5),  # Set default date to March 5th, 2025
         label_visibility="collapsed",
         key="modern_date_picker"
     )

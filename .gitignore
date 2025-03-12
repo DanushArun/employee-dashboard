@@ -22,6 +22,7 @@ var/
 
 # Streamlit
 .streamlit/secrets.toml
+.env
 
 # Virtual Environment
 venv/
