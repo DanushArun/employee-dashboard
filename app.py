@@ -342,9 +342,40 @@ st.markdown("""
     
     /* Chart styling */
     .stChart {
-        background-color: #1A1A1A;
-        border-radius: 8px;
-        padding: 0.5rem;
+        margin: 0 !important;
+        padding: 0 !important;
+        transform: scale(0.95) !important;
+    }
+
+    .stChart text {
+        fill: white !important;
+        font-family: var(--body-font) !important;
+        font-size: 6px !important;
+        letter-spacing: -0.5px !important;
+    }
+
+    .stChart .gtitle,
+    .stChart .legend text {
+        font-size: 8px !important;
+        letter-spacing: -0.4px !important;
+    }
+
+    .stChart .xaxislayer-above text,
+    .stChart .yaxislayer-above text {
+        font-size: 6px !important;
+        letter-spacing: -0.5px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .stChart .plot-container {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .stChart .main-svg {
+        transform-origin: center !important;
+        margin: -10px !important;
     }
     
     /* Analytics cards */
@@ -649,11 +680,35 @@ def show_store_detail(store_id):
     st.markdown('<hr style="border: 0; height: 1px; background: rgba(75, 0, 130, 0.7); margin: 0.5rem 0;">', unsafe_allow_html=True)
     
     # Visitor count breakdown - MOVED AFTER ANALYTICS
-    st.markdown('<span style="margin-top: 0.5rem; margin-bottom: 0.25rem; margin-right: 10px; font-family: var(--title-font); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: #888888;">VISITOR COUNT BREAKDOWN</span>', unsafe_allow_html=True)
+    st.markdown('<span style="margin-top: 1.5rem; margin-bottom: 1rem; margin-right: 10px; font-family: var(--title-font); font-size: 1.2rem; text-transform: uppercase; letter-spacing: 1px; color: #FFFFFF; font-weight: bold; display: block; text-align: center;">VISITOR COUNT BREAKDOWN</span>', unsafe_allow_html=True)
+    
+    # Add subtitle with instructions for better photo capture
+    st.markdown('<span style="margin-bottom: 1.5rem; font-family: var(--body-font); font-size: 0.9rem; color: #AAAAAA; display: block; text-align: center;">Tap chart to zoom or use controls for better visibility</span>', unsafe_allow_html=True)
     
     # Create chart data
+    # Convert 24-hour format to 12-hour format for time intervals
+    def convert_to_12hour_format(time_str):
+        start_time, end_time = time_str.split('-')
+        
+        # Convert start time
+        start_hour = int(start_time.split(':')[0])
+        start_suffix = 'am' if start_hour < 12 else 'pm'
+        start_hour = start_hour if start_hour <= 12 else start_hour - 12
+        start_hour = 12 if start_hour == 0 else start_hour
+        
+        # Convert end time
+        end_hour = int(end_time.split(':')[0])
+        end_suffix = 'am' if end_hour < 12 else 'pm'
+        end_hour = end_hour if end_hour <= 12 else end_hour - 12
+        end_hour = 12 if end_hour == 0 else end_hour
+        
+        return f"{start_hour}:00{start_suffix}-{end_hour}:00{end_suffix}"
+    
+    # Convert time intervals to 12-hour format
+    formatted_times = [convert_to_12hour_format(time) for time in metrics['hourly_breakdown'].keys()]
+    
     chart_data = pd.DataFrame({
-        'Time': list(metrics['hourly_breakdown'].keys()),
+        'Time': formatted_times,
         'Count': list(metrics['hourly_breakdown'].values())
     })
     
@@ -694,7 +749,7 @@ def show_store_detail(store_id):
         right: 0 !important;
         bottom: 0 !important;
         background: radial-gradient(circle at top right, rgba(138, 43, 226, 0.1), transparent 70%), 
-                  radial-gradient(circle at bottom left, rgba(75, 0, 130, 0.1), transparent 70%) !important;
+                  radial-gradient(circle at bottom left, rgba(75, 0, 130, 0.1), transparent 70%);
         z-index: 0 !important;
         pointer-events: none !important;
     }
@@ -703,9 +758,18 @@ def show_store_detail(store_id):
     .stChart text {
         fill: white !important;
         font-family: var(--body-font) !important;
-        font-size: 12px !important;
+        font-size: 8px !important;
         font-weight: 500 !important;
-        letter-spacing: 0.5px !important;
+        letter-spacing: -0.3px !important;
+    }
+    
+    /* Ensure x-axis labels are horizontal and properly spaced */
+    .stChart .xaxislayer-above text {
+        text-anchor: middle !important;
+        transform: rotate(0deg) !important;
+        font-size: 8px !important;
+        letter-spacing: -0.3px !important;
+        margin: 0 8px !important;
     }
     
     /* Make grid lines purple with glowing effect */
@@ -727,44 +791,6 @@ def show_store_detail(store_id):
     .stChart .xaxislayer-above text {
         text-anchor: middle !important;
         transform: rotate(0deg) !important;
-        font-size: 12px !important;
-        font-weight: 500 !important;
-        fill: rgba(255, 255, 255, 0.9) !important;
-    }
-    
-    /* Style the y-axis labels */
-    .stChart .yaxislayer-above text {
-        text-anchor: end !important;
-        font-size: 12px !important;
-        font-weight: 500 !important;
-        fill: rgba(255, 255, 255, 0.9) !important;
-    }
-    
-    /* Style the chart title and axis titles */
-    .stChart .gtitle, .stChart .xtitle, .stChart .ytitle {
-        fill: white !important;
-        font-family: var(--title-font) !important;
-        font-weight: 600 !important;
-        letter-spacing: 1px !important;
-        text-transform: uppercase !important;
-    }
-    
-    /* Ensure the chart container takes full width */
-    [data-testid="stChart"] {
-        width: 100% !important;
-        max-width: 100% !important;
-    }
-    
-    /* Ensure the SVG inside the chart takes full width */
-    [data-testid="stChart"] > div > div > svg {
-        width: 100% !important;
-        max-width: 100% !important;
-    }
-    
-    /* Add hover effect to bars */
-    .stChart path.bar:hover {
-        fill: rgba(175, 104, 255, 0.9) !important;
-        transition: fill 0.3s ease !important;
     }
     </style>
     ''', unsafe_allow_html=True)
@@ -778,47 +804,80 @@ def show_store_detail(store_id):
         chart_data, 
         x='Time', 
         y='Count',
-        height=400,
+        height=500,  # Increased height for better readability
     )
     
     # Customize the figure
     fig.update_layout(
         plot_bgcolor='rgba(0,0,0,0)',
         paper_bgcolor='rgba(0,0,0,0)',
-        margin=dict(l=40, r=20, t=10, b=40),
+        margin=dict(l=60, r=40, t=30, b=120),  # Increased bottom margin for rotated labels
         font=dict(
             family='Inter, sans-serif',
-            size=12,
+            size=16,  # Increased font size
             color='white'
         ),
         xaxis=dict(
             showgrid=True,
             gridcolor='rgba(138, 43, 226, 0.3)',
-            tickangle=0,
+            tickangle=0,  # Keep labels horizontal as requested
             title=None,
+            tickfont=dict(size=10),  # Even smaller font size to fit all horizontal labels
+            # Show all labels as requested
+            tickmode='array',
+            tickvals=chart_data['Time'].tolist(),
+            # Format labels to be more compact and readable
+            ticktext=[f"{time.split('-')[0].replace(':00', '').replace('am', 'AM').replace('pm', 'PM')}-{time.split('-')[1].replace(':00', '').replace('am', 'AM').replace('pm', 'PM')}" 
+                     for time in chart_data['Time']],
+            ticklen=8,  # Longer tick marks
         ),
         yaxis=dict(
             showgrid=True,
             gridcolor='rgba(138, 43, 226, 0.3)',
             title=None,
+            range=[0, max(max(chart_data['Count'] * 1.2), 15)],  # Add 20% headroom
+            tickfont=dict(size=16),  # Larger tick font
+            ticklen=8,  # Longer tick marks
         ),
         hoverlabel=dict(
-            bgcolor='rgba(75, 0, 130, 0.8)',
-            font_size=14,
-            font_family='Inter, sans-serif'
+            bgcolor='rgba(75, 0, 130, 0.9)',  # More opaque for better contrast
+            font_size=18,  # Larger hover font
+            font_family='Inter, sans-serif',
+            bordercolor='white',
         ),
+        bargap=0.6,  # Further increased spacing between bars for better label visibility
     )
     
     # Update the bar color and add effects
     fig.update_traces(
-        marker_color='rgba(138, 43, 226, 0.8)',
-        marker_line_color='rgba(255, 255, 255, 0.2)',
-        marker_line_width=1,
-        hovertemplate='<b>%{x}</b><br>Visitors: %{y}<extra></extra>'
+        marker_color='rgba(138, 43, 226, 0.9)',  # More opaque for better visibility
+        marker_line_color='rgba(255, 255, 255, 0.5)',  # Brighter outline
+        marker_line_width=2,  # Thicker outline
+        hovertemplate='<b>%{x}</b><br>Visitors: %{y}<extra></extra>',
+        width=0.7,  # Control bar width
+        textposition='outside',  # Show values above bars
+        texttemplate='%{y}',  # Show the count value
+        textfont=dict(
+            size=18,  # Large text font
+            color='white',
+            family='Inter, sans-serif',
+        ),
     )
     
-    # Display the chart
-    st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+    # Display the chart with zoom capabilities
+    st.plotly_chart(fig, use_container_width=True, config={
+        'displayModeBar': True,
+        'modeBarButtonsToAdd': ['zoomIn2d', 'zoomOut2d', 'resetScale2d'],
+        'modeBarButtonsToRemove': ['select2d', 'lasso2d'],
+        'displaylogo': False,
+        'toImageButtonOptions': {
+            'format': 'png',
+            'filename': 'visitor_breakdown',
+            'height': 700,  # Larger export height
+            'width': 1000,  # Larger export width
+            'scale': 3  # Higher resolution for photos
+        }
+    })
     
     # Section divider
     st.markdown('<hr style="border: 0; height: 1px; background: rgba(75, 0, 130, 0.7); margin: 0.5rem 0;">', unsafe_allow_html=True)
