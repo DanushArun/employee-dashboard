@@ -2,7 +2,7 @@
   "stores": [
     {
       "store_id": "59",
-      "name": "DriveX BTM Layout",
+      "name": "BTM Layout",
       "camera_config": {
         "ip": "192.168.0.193",
         "rtsp_port": "554",

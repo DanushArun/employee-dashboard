@@ -44,22 +44,59 @@ st.markdown("""
     
     /* Header with glass effect */
     .header-container {
-        background: rgba(75, 0, 130, 0.7);
+        background: linear-gradient(135deg, rgba(75, 0, 130, 0.3) 0%, rgba(45, 0, 75, 0.5) 100%);
         border-radius: 12px;
         padding: 1.5rem 2rem;
         margin-bottom: 2rem;
-        backdrop-filter: blur(10px);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 12px 32px rgba(75, 0, 130, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .header-container::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: radial-gradient(circle at top right, rgba(138, 43, 226, 0.1), transparent 70%), 
+                  radial-gradient(circle at bottom left, rgba(75, 0, 130, 0.1), transparent 70%);
+        z-index: 0;
+        pointer-events: none;
+    }
+    
+    .header-container::after {
+        content: "";
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(45deg, 
+                  rgba(255, 255, 255, 0) 0%, 
+                  rgba(255, 255, 255, 0.03) 50%, 
+                  rgba(255, 255, 255, 0) 100%);
+        transform: rotate(30deg);
+        pointer-events: none;
+        z-index: 1;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: radial-gradient(circle at top right, rgba(255, 255, 255, 0.15), transparent 70%);
+        pointer-events: none;
     }
     
     .header-title {
         color: white;
         font-family: var(--title-font);
-        font-size: 2.5rem;
+        font-size: 1.8rem;
         font-weight: 600;
         margin-left: 1rem;
         text-transform: uppercase;
@@ -68,26 +105,105 @@ st.markdown("""
     
     /* Search bar styling */
     .search-container {
-        margin-bottom: 2rem;
+        margin-bottom: 1rem;
         max-width: 600px;
         margin-left: auto;
         margin-right: auto;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
     
     /* Override Streamlit's default input styling */
+    .stTextInput {
+        width: 100%;
+    }
+    
+    .stTextInput > div {
+        background: linear-gradient(135deg, rgba(75, 0, 130, 0.5) 0%, rgba(45, 0, 75, 0.6) 100%) !important;
+        border-radius: 25px !important;
+        padding: 0 !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        box-shadow: 0 8px 32px rgba(75, 0, 130, 0.2) !important;
+        backdrop-filter: blur(10px) !important;
+        -webkit-backdrop-filter: blur(10px) !important;
+        transition: all 0.3s ease !important;
+        position: relative;
+        overflow: hidden !important;
+    }
+    
+    .stTextInput > div:hover {
+        border: 1px solid rgba(138, 43, 226, 0.4) !important;
+        box-shadow: 0 8px 32px rgba(138, 43, 226, 0.3) !important;
+        transform: translateY(-2px) !important;
+    }
+    
+    .stTextInput > div:focus-within {
+        border: 1px solid rgba(138, 43, 226, 0.6) !important;
+        box-shadow: 0 8px 32px rgba(138, 43, 226, 0.4) !important;
+    }
+    
+    .stTextInput > div > div {
+        background-color: transparent !important;
+        width: 100% !important;
+    }
+    
     .stTextInput > div > div > input {
-        background-color: #2D2D2D !important;
+        background-color: transparent !important;
         color: white !important;
-        border-radius: 20px !important;
-        padding: 10px 15px !important;
+        padding: 10px 45px 10px 20px !important;
         border: none !important;
         height: 45px !important;
         font-family: var(--body-font) !important;
+        font-size: 1rem !important;
+        letter-spacing: 0.5px !important;
+        width: 100% !important;
     }
     
     .stTextInput > div > div > input::placeholder {
-        color: #888 !important;
+        color: rgba(255, 255, 255, 0.5) !important;
         font-family: var(--body-font) !important;
+        font-weight: 300 !important;
+    }
+    
+    /* Add search icon using pseudo-element with SVG for better styling */
+    .stTextInput > div::after {
+        content: "";
+        position: absolute;
+        right: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 18px;
+        height: 18px;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='rgba(255, 255, 255, 0.5)' viewBox='0 0 24 24'%3E%3Cpath d='M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-size: contain;
+        z-index: 10;
+        pointer-events: none;
+    }
+    
+    /* Hide dropdown menu and all related elements */
+    .stSelectbox,
+    [data-baseweb="popover"],
+    [data-baseweb="select"],
+    [data-baseweb="select-option"],
+    [data-baseweb="menu"],
+    [data-baseweb="list"],
+    .stSelectbox [data-testid="stWidgetLabel"],
+    div[data-baseweb="select-dropdown"],
+    div[data-baseweb="select-dropdown-container"],
+    div[data-baseweb="select-dropdown-listbox"],
+    div[data-baseweb="menu"] {
+        display: none !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+        height: 0 !important;
+        width: 0 !important;
+        overflow: hidden !important;
+        position: absolute !important;
+        z-index: -1 !important;
     }
     
     /* Store card styling */
@@ -388,7 +504,7 @@ def show_main_page():
     
     # Search bar
     st.markdown('<div class="search-container">', unsafe_allow_html=True)
-    search = st.text_input("", placeholder="🔍 Search stores by name...", label_visibility="collapsed")
+    search = st.text_input("", placeholder="Search stores by name...", label_visibility="collapsed")
     st.markdown('</div>', unsafe_allow_html=True)
     
     # Load stores
@@ -401,7 +517,7 @@ def show_main_page():
         filtered_stores = stores
     
     # Create a container for the store cards grid
-    st.markdown('<div style="margin-top: 50px;">', unsafe_allow_html=True)
+    st.markdown('<div style="margin-top: 20px;">', unsafe_allow_html=True)
     
     # Create a layout with 2 columns - left column for grid (75% width) and right column empty (25% width)
     # This pushes the content to the left side of the page
@@ -466,7 +582,7 @@ def show_store_detail(store_id):
     
     # Create a container for the date input with custom styling - with label
     st.markdown('<div style="display: flex; align-items: center; margin-bottom: 0.5rem;">', unsafe_allow_html=True)
-    st.markdown('<span style="margin-right: 10px; font-size: 0.9rem; color: #888; font-family: var(--title-font); text-transform: uppercase; letter-spacing: 0.5px;">DATE:</span>', unsafe_allow_html=True)
+    st.markdown('<span style="margin-right: 10px; font-size: 0.75rem; color: #888888; font-family: var(--title-font); text-transform: uppercase; letter-spacing: 0.5px;">DATE</span>', unsafe_allow_html=True)
     date_col, _ = st.columns([3, 7])
     with date_col:
         selected_date = st.date_input("", datetime.now(), label_visibility="collapsed")
@@ -482,7 +598,7 @@ def show_store_detail(store_id):
     st.markdown('<hr style="border: 0; height: 1px; background: rgba(75, 0, 130, 0.7); margin: 0.5rem 0;">', unsafe_allow_html=True)
     
     # Display total visitors
-    st.markdown('<p style="margin-top: 0.5rem; margin-bottom: 0.25rem; font-family: var(--title-font); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px; color: #888;">UNIQUE VISITORS</p>', unsafe_allow_html=True)
+    st.markdown('<span style="margin-top: 0.5rem; margin-bottom: 0.25rem; font-family: var(--title-font); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: #888888;">UNIQUE VISITORS</span>', unsafe_allow_html=True)
     st.markdown(f"""
         <div class="visitor-count">{metrics['total_visitors']}</div>
         <div class="visitor-date">↑ on {selected_date.strftime("%B %d, %Y")}</div>
@@ -491,51 +607,8 @@ def show_store_detail(store_id):
     # Section divider
     st.markdown('<hr style="border: 0; height: 1px; background: rgba(75, 0, 130, 0.7); margin: 0.5rem 0;">', unsafe_allow_html=True)
     
-    # Visitor count breakdown
-    st.markdown('<h3 class="section-title" style="font-size: 1.5rem;">VISITOR COUNT BREAKDOWN</h3>', unsafe_allow_html=True)
-    
-    # Create columns for table and chart
-    col1, col2 = st.columns([1, 2])
-    
-    with col1:
-        # Create table
-        st.markdown("""
-            <table class="styled-table">
-                <thead>
-                    <tr>
-                        <th>Time Interval</th>
-                        <th>Count</th>
-                    </tr>
-                </thead>
-                <tbody>
-        """, unsafe_allow_html=True)
-        
-        for interval, count in metrics['hourly_breakdown'].items():
-            st.markdown(f"""
-                <tr>
-                    <td>{interval}</td>
-                    <td>{count}</td>
-                </tr>
-            """, unsafe_allow_html=True)
-        
-        st.markdown("""
-                </tbody>
-            </table>
-        """, unsafe_allow_html=True)
-    
-    with col2:
-        # Create chart
-        chart_data = pd.DataFrame({
-            'Time': list(metrics['hourly_breakdown'].keys()),
-            'Count': list(metrics['hourly_breakdown'].values())
-        })
-        st.bar_chart(chart_data.set_index('Time'), height=320)
-    
-    # Section divider
-    st.markdown('<hr style="border: 0; height: 1px; background: rgba(75, 0, 130, 0.7); margin: 0.5rem 0;">', unsafe_allow_html=True)
-    
-    # Analytics section
-    st.markdown('<h3 class="section-title" style="font-size: 1.5rem;">ANALYTICS</h3>', unsafe_allow_html=True)
+    # Analytics section - MOVED HERE
+    st.markdown('<span style="margin-top: 0.5rem; margin-bottom: 0.25rem; margin-right: 10px; font-family: var(--title-font); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: #888888;">ANALYTICS</span>', unsafe_allow_html=True)
     
     # Create analytics cards
     col1, col2, col3, col4 = st.columns(4)
@@ -571,6 +644,181 @@ def show_store_detail(store_id):
                 <div class="analytics-value">{metrics['analytics']['callstore_count']}</div>
             </div>
         """, unsafe_allow_html=True)
+    
+    # Section divider
+    st.markdown('<hr style="border: 0; height: 1px; background: rgba(75, 0, 130, 0.7); margin: 0.5rem 0;">', unsafe_allow_html=True)
+    
+    # Visitor count breakdown - MOVED AFTER ANALYTICS
+    st.markdown('<span style="margin-top: 0.5rem; margin-bottom: 0.25rem; margin-right: 10px; font-family: var(--title-font); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: #888888;">VISITOR COUNT BREAKDOWN</span>', unsafe_allow_html=True)
+    
+    # Create chart data
+    chart_data = pd.DataFrame({
+        'Time': list(metrics['hourly_breakdown'].keys()),
+        'Count': list(metrics['hourly_breakdown'].values())
+    })
+    
+    # Custom chart with styling - enhanced with glassy effect
+    st.markdown('''
+    <style>
+    /* Custom styling for the chart with glassy effect */
+    .stChart > div > div > div {
+        background-color: black !important;
+        border-radius: 12px !important;
+        padding: 10px !important;
+        border: 1px solid rgba(138, 43, 226, 0.3) !important;
+        box-shadow: 0 8px 32px rgba(138, 43, 226, 0.2) !important;
+        backdrop-filter: blur(10px) !important;
+        -webkit-backdrop-filter: blur(10px) !important;
+    }
+    
+    /* Chart container with glass effect */
+    [data-testid="stChart"] {
+        background: linear-gradient(135deg, rgba(75, 0, 130, 0.2) 0%, rgba(45, 0, 75, 0.3) 100%) !important;
+        border-radius: 12px !important;
+        padding: 20px !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        box-shadow: 0 8px 32px rgba(75, 0, 130, 0.2) !important;
+        backdrop-filter: blur(10px) !important;
+        -webkit-backdrop-filter: blur(10px) !important;
+        margin-bottom: 20px !important;
+        position: relative !important;
+        overflow: hidden !important;
+    }
+    
+    /* Add subtle glow effect */
+    [data-testid="stChart"]::before {
+        content: "" !important;
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        background: radial-gradient(circle at top right, rgba(138, 43, 226, 0.1), transparent 70%), 
+                  radial-gradient(circle at bottom left, rgba(75, 0, 130, 0.1), transparent 70%) !important;
+        z-index: 0 !important;
+        pointer-events: none !important;
+    }
+    
+    /* Make axis labels white and improve readability */
+    .stChart text {
+        fill: white !important;
+        font-family: var(--body-font) !important;
+        font-size: 12px !important;
+        font-weight: 500 !important;
+        letter-spacing: 0.5px !important;
+    }
+    
+    /* Make grid lines purple with glowing effect */
+    .stChart line {
+        stroke: rgba(138, 43, 226, 0.6) !important;
+        stroke-width: 1px !important;
+        filter: drop-shadow(0 0 2px rgba(138, 43, 226, 0.5)) !important;
+    }
+    
+    /* Make the chart bars purple with gradient */
+    .stChart path.bar {
+        fill: url(#purpleGradient) !important;
+        stroke: rgba(255, 255, 255, 0.1) !important;
+        stroke-width: 1px !important;
+        filter: drop-shadow(0 0 3px rgba(138, 43, 226, 0.5)) !important;
+    }
+    
+    /* Ensure x-axis labels are horizontal and readable */
+    .stChart .xaxislayer-above text {
+        text-anchor: middle !important;
+        transform: rotate(0deg) !important;
+        font-size: 12px !important;
+        font-weight: 500 !important;
+        fill: rgba(255, 255, 255, 0.9) !important;
+    }
+    
+    /* Style the y-axis labels */
+    .stChart .yaxislayer-above text {
+        text-anchor: end !important;
+        font-size: 12px !important;
+        font-weight: 500 !important;
+        fill: rgba(255, 255, 255, 0.9) !important;
+    }
+    
+    /* Style the chart title and axis titles */
+    .stChart .gtitle, .stChart .xtitle, .stChart .ytitle {
+        fill: white !important;
+        font-family: var(--title-font) !important;
+        font-weight: 600 !important;
+        letter-spacing: 1px !important;
+        text-transform: uppercase !important;
+    }
+    
+    /* Ensure the chart container takes full width */
+    [data-testid="stChart"] {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    /* Ensure the SVG inside the chart takes full width */
+    [data-testid="stChart"] > div > div > svg {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    /* Add hover effect to bars */
+    .stChart path.bar:hover {
+        fill: rgba(175, 104, 255, 0.9) !important;
+        transition: fill 0.3s ease !important;
+    }
+    </style>
+    ''', unsafe_allow_html=True)
+    
+    # Create the full-width chart with enhanced styling using Plotly for better customization
+    import plotly.express as px
+    import plotly.graph_objects as go
+    
+    # Create a Plotly figure with custom styling
+    fig = px.bar(
+        chart_data, 
+        x='Time', 
+        y='Count',
+        height=400,
+    )
+    
+    # Customize the figure
+    fig.update_layout(
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+        margin=dict(l=40, r=20, t=10, b=40),
+        font=dict(
+            family='Inter, sans-serif',
+            size=12,
+            color='white'
+        ),
+        xaxis=dict(
+            showgrid=True,
+            gridcolor='rgba(138, 43, 226, 0.3)',
+            tickangle=0,
+            title=None,
+        ),
+        yaxis=dict(
+            showgrid=True,
+            gridcolor='rgba(138, 43, 226, 0.3)',
+            title=None,
+        ),
+        hoverlabel=dict(
+            bgcolor='rgba(75, 0, 130, 0.8)',
+            font_size=14,
+            font_family='Inter, sans-serif'
+        ),
+    )
+    
+    # Update the bar color and add effects
+    fig.update_traces(
+        marker_color='rgba(138, 43, 226, 0.8)',
+        marker_line_color='rgba(255, 255, 255, 0.2)',
+        marker_line_width=1,
+        hovertemplate='<b>%{x}</b><br>Visitors: %{y}<extra></extra>'
+    )
+    
+    # Display the chart
+    st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
     
     # Section divider
     st.markdown('<hr style="border: 0; height: 1px; background: rgba(75, 0, 130, 0.7); margin: 0.5rem 0;">', unsafe_allow_html=True)
