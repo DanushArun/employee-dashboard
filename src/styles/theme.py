@@ -206,34 +206,73 @@ def apply_custom_theme():
             color: #FF4757;
         }
         
-        /* Search box styling */
-        .stTextInput > div > div > input {
-            background-color: var(--card-bg) !important;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: var(--text-color) !important;
-            border-radius: 8px;
-            padding: 0.5rem 1rem;
-            font-size: 0.9rem;
-            transition: all 0.3s ease;
+        /* Search bar styling */
+        .search-container {
+            margin-bottom: 1rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         
-        .stTextInput > div > div > input:focus {
-            border-color: var(--accent-color) !important;
-            box-shadow: 0 0 0 1px var(--accent-color) !important;
+        /* Override Streamlit's default input styling */
+        .stTextInput {
+            width: 100%;
+        }
+        
+        .stTextInput > div {
+            background: linear-gradient(135deg, rgba(75, 0, 130, 0.5) 0%, rgba(45, 0, 75, 0.6) 100%) !important;
+            border-radius: 25px !important;
+            padding: 0 !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            box-shadow: 0 8px 32px rgba(75, 0, 130, 0.2) !important;
+            backdrop-filter: blur(10px) !important;
+            -webkit-backdrop-filter: blur(10px) !important;
+            transition: all 0.3s ease !important;
+            position: relative;
+            overflow: hidden !important;
+        }
+        
+        .stTextInput > div:hover {
+            border: 1px solid rgba(138, 43, 226, 0.4) !important;
+            box-shadow: 0 8px 32px rgba(138, 43, 226, 0.3) !important;
+            transform: translateY(-2px) !important;
+        }
+        
+        .stTextInput > div:focus-within {
+            border: 1px solid rgba(138, 43, 226, 0.6) !important;
+            box-shadow: 0 8px 32px rgba(138, 43, 226, 0.4) !important;
+        }
+        
+        .stTextInput > div > div {
+            background-color: transparent !important;
+            width: 100% !important;
+        }
+        
+        .stTextInput > div > div > input {
+            background-color: transparent !important;
+            color: white !important;
+            padding: 10px 45px 10px 20px !important;
+            border: none !important;
+            height: 45px !important;
+            font-family: var(--body-font) !important;
+            font-size: 1rem !important;
+            font-weight: bold !important;
+            letter-spacing: 0.5px !important;
+            width: 100% !important;
+            line-height: 45px !important;
         }
         
         .stTextInput > div > div > input::placeholder {
-            color: rgba(255, 255, 255, 0.5);
-        }
-        
-        /* Hide default Streamlit labels when needed */
-        .stTextInput label, .stSelectbox label {
-            display: none;
-        }
-        
-        /* Improve spacing between search and dropdown */
-        .stTextInput {
-            margin-bottom: 0.5rem;
+            color: rgba(255, 255, 255, 0.5) !important;
+            font-family: var(--body-font) !important;
+            font-weight: 600 !important;
+            line-height: 45px !important;
+            display: flex !important;
+            align-items: center !important;
         }
         </style>
     """, unsafe_allow_html=True)

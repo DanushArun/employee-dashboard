@@ -2,7 +2,22 @@
   "stores": [
     {
       "store_id": "59",
-      "name": "BTM Layout",
+      "name": "DriveX BTM Layout",
+      "camera_config": {
+        "ip": "192.168.0.193",
+        "rtsp_port": "554",
+        "username": "admin",
+        "password": "admin",
+        "main_stream_path": "/ch05/0",
+        "sub_stream_path": "/ch05/1",
+        "max_retries": 3,
+        "retry_delay": 5,
+        "rtsp_env_options": "rtsp_transport=tcp|max_delay=500000"
+      }
+    },
+    {
+      "store_id": "786",
+      "name": "DriveX Office",
       "camera_config": {
         "ip": "192.168.0.193",
         "rtsp_port": "554",

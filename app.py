@@ -595,9 +595,22 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+# Initialize session state for store sync tracking
+if 'last_store_sync' not in st.session_state:
+    st.session_state.last_store_sync = datetime.now()
+
 # Load store data
-@st.cache_data
+@st.cache_data(ttl=60)  # Cache for 60 seconds
 def load_stores():
+    # Check if it's time to sync stores (every 5 minutes)
+    now = datetime.now()
+    if 'last_store_sync' not in st.session_state or \
+       (now - st.session_state.last_store_sync).total_seconds() > 300:
+        from src.store_sync import sync_stores
+        if sync_stores():
+            st.rerun()  # Refresh the page if stores were updated
+        st.session_state.last_store_sync = now
+    
     try:
         with open('data/stores.json', 'r') as f:
             data = json.load(f)
