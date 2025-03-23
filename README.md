@@ -1,8 +1,7 @@
 # Employee Performance Dashboard
 
 A modern, industrial-grade dashboard for tracking employee performance metrics built with Streamlit.
-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
-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
+
 ## Features
 
 - **Employee Selection**: Searchable dropdown to select employees by ID
