@@ -6,8 +6,19 @@ A modern, industrial-grade dashboard for tracking employee performance metrics b
 
 - **Employee Selection**: Searchable dropdown to select employees by ID
 - **Date Range Filtering**: Select custom date ranges to view performance metrics
-- **Performance Metrics**: View key metrics including Total Marks, Trainer Grade, and Training Count
-- **Status Indicator**: Visual status indicator showing Pass/Fail status
+- **Performance Radar Chart**: Interactive radar visualization showing normalized scores for:
+  - Trainer Grade (0-4 scale)
+  - Training Count
+  - Upper Limit (UL) Score
+  - Performance Level (PL) Score
+  - Error Count
+  - Kaizen Responsibility
+  - Flexibility
+  - Teamwork
+- **Trend Analysis**: Line charts showing metric progression over time
+- **Comparative Analysis**: Bar charts comparing individual metrics against team averages
+- **Status Distribution**: Visual breakdown of Pass/Fail ratios
+- **Zone Distribution**: Bar chart showing employee distribution across work zones
 
 ## Installation
 
@@ -65,18 +76,55 @@ The dashboard will be accessible from anywhere with an internet connection, and 
 
 The dashboard expects a CSV file with the following columns:
 - `employee_id`: Unique identifier for each employee
-- `total_marks`: Numerical score
-- `trainer_grade`: Decimal grade value
+- `trainer_grade`: Decimal grade value (0-4 scale)
+- `training_count`: Number of training sessions completed
+- `ul`: Upper limit score (0-5 scale, lower is better)
+- `pl`: Performance level score (0-5 scale, lower is better)
+- `error_count`: Number of errors (0-5 scale, lower is better)
+- `kaizen_responsible`: Kaizen responsibility score (0-4 scale)
+- `flexibility_credit`: Flexibility rating (0-4 scale)
+- `teamwork_credit`: Teamwork rating (0-4 scale)
 - `status`: "Pass" or "Fail"
-- `training_count`: Number of training sessions
+- `zone`: Work zone assignment
 - `date`: Date in YYYY-MM-DD format
+
+## Tech Stack
+
+- **Frontend**: Streamlit for the web interface
+- **Data Visualization**: Altair for interactive charts
+- **Data Processing**: Pandas and NumPy for data manipulation
+- **Styling**: Custom theme configuration for a modern look
+
+## Dependencies
+
+The dashboard requires the following main packages:
+- streamlit
+- pandas
+- numpy
+- altair
+
+All dependencies are listed in `requirements.txt`.
 
 ## Customization
 
 You can customize the dashboard by modifying:
 - `app.py`: Main application logic
-- `src/styles/theme.py`: Theme configuration (if you want to separate styling)
+- `src/styles/theme.py`: Theme configuration
 - `src/assets/`: Place custom images and assets here
+- `src/components/charts.py`: Visualization components
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
+
+Please ensure your code follows the existing style and includes appropriate tests.
+
+## Support
+
+For issues and feature requests, please use the GitHub issue tracker.
 
 ## License
 

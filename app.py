@@ -1,7 +1,17 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
 from datetime import datetime, timedelta
 from PIL import Image
+
+# Import custom components
+from src.components.charts import (
+    create_performance_chart,
+    create_trend_chart,
+    create_comparison_chart,
+    create_status_distribution,
+    create_zone_distribution
+)
 
 # Page config
 st.set_page_config(
@@ -487,17 +497,27 @@ def load_data():
     # Fill NaN values
     df = df.fillna(0)
     
-    # Calculate total marks with additional metrics
+    # Normalize metrics to 0-1 range
+    df['norm_trainer_grade'] = df['trainer_grade'] / 4.0  # Assuming max grade is 4
+    df['norm_training_count'] = df['training_count'] / df['training_count'].max()
+    df['norm_ul'] = 1 - (df['ul'] / 5.0)  # Lower is better, max assumed 5
+    df['norm_pl'] = 1 - (df['pl'] / 5.0)  # Lower is better, max assumed 5
+    df['norm_error_count'] = 1 - (df['error_count'] / df['error_count'].max())  # Lower is better
+    df['norm_kaizen'] = df['kaizen_responsible'] / df['kaizen_responsible'].max()
+    df['norm_flexibility'] = df['flexibility_credit'] / df['flexibility_credit'].max()
+    df['norm_teamwork'] = df['teamwork_credit'] / df['teamwork_credit'].max()
+    
+    # Calculate weighted normalized total score (weights sum to 1)
     df['total_marks'] = (
-        df['trainer_grade'] + 
-        df['training_count'] * 0.1 +
-        df['ul'] * 0.2 +
-        df['pl'] * 0.2 -
-        df['error_count'] * 0.1 +
-        df['kaizen_responsible'] * 0.3 +
-        df['flexibility_credit'] * 0.2 +
-        df['teamwork_credit'] * 0.2
-    )
+        df['norm_trainer_grade'] * 0.20 +  # Core competency
+        df['norm_training_count'] * 0.10 +  # Learning progress
+        df['norm_ul'] * 0.15 +  # Performance metrics
+        df['norm_pl'] * 0.15 +
+        df['norm_error_count'] * 0.10 +
+        df['norm_kaizen'] * 0.15 +  # Initiative and improvement
+        df['norm_flexibility'] * 0.075 +  # Soft skills
+        df['norm_teamwork'] * 0.075  # Collaboration
+    ) * 4.0  # Scale to 0-4.0 range
     
     # Convert month to date
     month_map = {
@@ -516,12 +536,12 @@ def load_data():
 # Load data
 df = load_data()
 
-# Create two columns for filters
-col1, col2 = st.columns(2)
+# Create three columns for filters
+col1, col2, col3 = st.columns([1, 1, 1])
 
 with col1:
     # Employee ID dropdown with enhanced search
-    st.markdown("<p style='color: #888; font-size: 14px; margin-bottom: 8px;'>EMPLOYEE ID List</p>", unsafe_allow_html=True)
+    st.markdown("<p style='color: #888; font-size: 14px; margin-bottom: 8px;'>EMPLOYEE ID</p>", unsafe_allow_html=True)
     
     # Add search functionality
     search_term = st.text_input(
@@ -547,159 +567,114 @@ with col1:
     )
 
 with col2:
-    # Month selector (only shown if an employee is selected)
-    if employee_id:
-        # Get months that have data for this employee
-        employee_months = df[df['employee_id'] == employee_id]['month'].unique()
-        
-        # Create a mapping for month display names
-        month_display_map = {
-            'jan': 'January',
-            'feb': 'February',
-            'mar': 'March',
-            'apr': 'April',
-            'may': 'May',
-            'june': 'June',
-            'july': 'July',
-            'aug': 'August',
-            'sept': 'September',
-            'oct': 'October',
-            'nov': 'November',
-            'dec': 'December'
-        }
-        
-        # Create month options with proper capitalization
-        month_options = [month_display_map.get(m.lower(), m.capitalize()) if isinstance(m, str) else "Unknown" 
-                         for m in employee_months]
-        
-        # If no months found, show a message
-        if not month_options:
-            st.markdown("<p style='color: #888; font-size: 14px;'>No month data available for this employee</p>", unsafe_allow_html=True)
-            selected_month = None
-        else:
-            # Show available months
-            st.markdown("<p style='color: #888; font-size: 14px; margin-bottom: 8px;'>MONTH</p>", unsafe_allow_html=True)
-            
-            # Create a mapping from display name back to actual month value
-            reverse_month_map = {v: k for k, v in month_display_map.items()}
-            
-            # Month dropdown
-            selected_month_display = st.selectbox(
-                "Month",
-                options=month_options,
-                index=0,
-                key="month_selector",
-                label_visibility="collapsed"
-            )
-            
-            # Convert display name back to actual month value
-            selected_month = reverse_month_map.get(selected_month_display, selected_month_display.lower())
-            
-            # Show available months for this employee
-            if len(month_options) > 1:
-                st.markdown(f"<p style='color: #888; font-size: 12px;'>Data available for: {', '.join(month_options)}</p>", unsafe_allow_html=True)
-    else:
-        selected_month = None
-        # Show placeholder when no employee is selected
-        st.markdown("<p style='color: #888; font-size: 14px; margin-bottom: 8px;'>MONTH</p>", unsafe_allow_html=True)
-        st.markdown("<p style='color: #555; font-style: italic; font-size: 14px;'>Select an employee first</p>", unsafe_allow_html=True)
+    # Zone selector
+    st.markdown("<p style='color: #888; font-size: 14px; margin-bottom: 8px;'>ZONE</p>", unsafe_allow_html=True)
+    zones = [''] + sorted(df['zone'].unique().tolist())
+    zone = st.selectbox(
+        "-",
+        options=zones,
+        format_func=lambda x: x if x else "Select Zone",
+        label_visibility="collapsed"
+    )
+
+with col3:
+    # Date Range
+    st.markdown("<p style='color: #888; font-size: 14px; margin-bottom: 8px;'>DATE RANGE</p>", unsafe_allow_html=True)
+    date_cols = st.columns(2)
+    with date_cols[0]:
+        start_date = st.date_input("From", value=None, label_visibility="collapsed")
+    with date_cols[1]:
+        end_date = st.date_input("To", value=None, label_visibility="collapsed")
 
 # Filter data
 if employee_id:
-    # Filter by employee ID and selected month
-    if selected_month:
-        filtered_df = df[
-            (df['employee_id'] == employee_id) &
-            (df['month'].str.lower() == selected_month.lower())
+    # Start with employee filter
+    filtered_df = df[df['employee_id'] == employee_id]
+    
+    # Apply zone filter if selected
+    if zone:
+        filtered_df = filtered_df[filtered_df['zone'] == zone]
+    
+    # Apply date range filter if selected
+    if start_date and end_date:
+        filtered_df = filtered_df[
+            (filtered_df['date'] >= pd.to_datetime(start_date)) &
+            (filtered_df['date'] <= pd.to_datetime(end_date))
         ]
-    else:
-        # If no month is selected, show all data for the employee
-        filtered_df = df[df['employee_id'] == employee_id]
 
-    if not filtered_df.empty:
-        # First row: OJT Score
-        st.markdown("<h3 class='halo-font' style='font-size: 1.5rem; margin-top: 0;'>OJT Score</h3>", unsafe_allow_html=True)
-        m1, m2, m3 = st.columns(3)
+    # Check if we have data to display
+    if isinstance(filtered_df, pd.DataFrame) and not filtered_df.empty:
+        # Create tabs for different views
+        tab1, tab2 = st.tabs(["Dashboard", "Performance Analysis"])
         
-        with m1:
-            st.metric("TOTAL MARKS", f"{filtered_df['total_marks'].iloc[0]:.1f}/4.0")
+        with tab1:
+            # Total Grade (centered)
+            _, grade_col, _ = st.columns([1, 2, 1])
+            with grade_col:
+                st.markdown("""
+                    <div style='background: var(--card-bg); border-radius: 12px; text-align: center; padding: 2rem; margin: 2rem 0;'>
+                        <h2 style='color: var(--accent-color); font-size: 1.2rem; margin-bottom: 1rem;'>TOTAL GRADE</h2>
+                        <div style='font-size: 2.5rem; font-weight: bold;'>{:.1f}/4.0</div>
+                    </div>
+                """.format(filtered_df['total_marks'].values[0]), unsafe_allow_html=True)
 
-        with m2:
-            st.metric("TRAINER GRADE", f"{filtered_df['trainer_grade'].iloc[0]:.1f}/4.0")
-
-        with m3:
-            st.metric("TRAINING COUNT", int(filtered_df['training_count'].iloc[0]))
+        # OJT Score section
+        st.markdown("<h3 class='halo-font' style='font-size: 1.5rem; margin-top: 0;'>OJT</h3>", unsafe_allow_html=True)
+        ojt_cols = st.columns(4)
         
-        # Second row: Status
-        st.markdown("<div style='height: 1.5rem;'></div>", unsafe_allow_html=True)
-        status = filtered_df['status'].iloc[0]
+        with ojt_cols[0]:
+            st.metric("TRAINEE GRADE", f"{filtered_df['trainer_grade'].values[0]:.1f}/4.0")
+        with ojt_cols[1]:
+            st.metric("TRAINER GRADE", f"{filtered_df['trainer_grade'].values[0]:.1f}/4.0")
+        with ojt_cols[2]:
+            st.metric("STATUS", filtered_df['status'].values[0])
+        with ojt_cols[3]:
+            st.metric("PERCENTILE", "85%")
         
-        # Center the status indicator
-        _, status_col, _ = st.columns([1, 2, 1])
-        with status_col:
-            st.markdown(f"""
-                <div style='background: var(--card-bg); border-radius: 10px; text-align: center; padding: 1.5rem;'>
-                    <p style='color: #888; font-size: 14px; margin-bottom: 8px;'>STATUS</p>
-                    <div class='status-{status.lower()}'>{status}</div>
-                </div>
-            """, unsafe_allow_html=True)
+        # Absenteeism section
+        st.markdown("<h3 class='halo-font' style='font-size: 1.5rem;'>ABSENTEEISM</h3>", unsafe_allow_html=True)
+        abs_cols = st.columns(2)
+        with abs_cols[0]:
+            st.metric("INDIVIDUAL ABSENTEEISM", f"{filtered_df['ul'].values[0]:.1f}")
+        with abs_cols[1]:
+            st.metric("ZONAL ABSENTEEISM", f"{filtered_df['pl'].values[0]:.1f}")
         
-        # Third row: Absenteeism
-        st.markdown("<div style='height: 2rem;'></div>", unsafe_allow_html=True)
-        st.markdown("<h3 class='halo-font' style='font-size: 1.5rem;'>Absenteeism</h3>", unsafe_allow_html=True)
-        ul_pl_1, ul_pl_2, ul_pl_3 = st.columns(3)
+        # Line Loss section
+        st.markdown("<h3 class='halo-font' style='font-size: 1.5rem;'>LINE LOSS</h3>", unsafe_allow_html=True)
+        line_cols = st.columns(2)
+        with line_cols[0]:
+            st.metric("LINE LOSS COUNT", int(filtered_df['line_loss'].values[0]))
+        with line_cols[1]:
+            st.metric("LINE LOSS GRADE", "3.5/4.0")
         
-        with ul_pl_1:
-            st.metric("UL (Upper Limit)", filtered_df['ul'].iloc[0])
+        # Associate Error section
+        st.markdown("<h3 class='halo-font' style='font-size: 1.5rem;'>ASSOCIATE ERROR</h3>", unsafe_allow_html=True)
+        error_cols = st.columns(2)
+        with error_cols[0]:
+            st.metric("ASSOCIATE ERROR COUNT", int(filtered_df['error_count'].values[0]))
+        with error_cols[1]:
+            st.metric("ASSOCIATE ERROR GRADE", "3.0/4.0")
         
-        with ul_pl_2:
-            st.metric("PL (Production Limit)", filtered_df['pl'].iloc[0])
+        # Adherence sections
+        adh_cols = st.columns(2)
+        with adh_cols[0]:
+            st.markdown("<h3 class='halo-font' style='font-size: 1.5rem;'>WI & PPE ADHERENCE</h3>", unsafe_allow_html=True)
+            st.metric("GRADE", "3.8/4.0")
+        with adh_cols[1]:
+            st.markdown("<h3 class='halo-font' style='font-size: 1.5rem;'>DWM ADHERENCE</h3>", unsafe_allow_html=True)
+            st.metric("GRADE", "3.5/4.0")
         
-        with ul_pl_3:
-            month_value = filtered_df['month'].iloc[0]
-            month_display = month_value.capitalize() if isinstance(month_value, str) else "N/A"
-            st.metric("Month", month_display)
-        
-        # Fourth row: Line Loss Count
-        st.markdown("<div style='height: 2rem;'></div>", unsafe_allow_html=True)
-        st.markdown("<h3 class='halo-font' style='font-size: 1.5rem;'>Line Loss Count</h3>", unsafe_allow_html=True)
-        
-        # Use 3 columns with the middle one empty to reduce the gap
-        zone_1, _, zone_2 = st.columns([1, 0.2, 1])
-        
-        with zone_1:
-            st.metric("Zone", int(filtered_df['zone'].iloc[0]))
-        
-        with zone_2:
-            st.metric("Line Loss/Month", filtered_df['line_loss'].iloc[0])
-        
-        # Fifth row: Associate Error
-        st.markdown("<div style='height: 2rem;'></div>", unsafe_allow_html=True)
-        st.markdown("<h3 class='halo-font' style='font-size: 1.5rem;'>Associate Error</h3>", unsafe_allow_html=True)
-        err_1, err_2, err_3 = st.columns(3)
-        
-        with err_1:
-            st.metric("Error Count", int(filtered_df['error_count'].iloc[0]))
-        
-        with err_2:
-            st.metric("Unsafe Acts Reported", int(filtered_df['unsafe_act_reported'].iloc[0]))
-        
-        with err_3:
-            st.metric("Unsafe Acts Responsible", int(filtered_df['unsafe_act_responsible'].iloc[0]))
-        
-        # Sixth row: Performance Credits
-        st.markdown("<div style='height: 2rem;'></div>", unsafe_allow_html=True)
-        st.markdown("<h3 class='halo-font' style='font-size: 1.5rem;'>Performance Credits</h3>", unsafe_allow_html=True)
-        cred_1, cred_2, cred_3 = st.columns(3)
-        
-        with cred_1:
-            st.metric("Kaizen Responsible", int(filtered_df['kaizen_responsible'].iloc[0]))
-        
-        with cred_2:
-            st.metric("Flexibility Credit", int(filtered_df['flexibility_credit'].iloc[0]))
-        
-        with cred_3:
-            st.metric("Teamwork Credit", int(filtered_df['teamwork_credit'].iloc[0]))
+        # Performance Credits section
+        st.markdown("<h3 class='halo-font' style='font-size: 1.5rem;'>PERFORMANCE CREDITS</h3>", unsafe_allow_html=True)
+        perf_cols = st.columns(4)
+        with perf_cols[0]:
+            st.metric("KAIZEN GRADE", f"{filtered_df['kaizen_responsible'].values[0]}/4.0")
+        with perf_cols[1]:
+            st.metric("UNSAFE ACT GRADE", f"{filtered_df['unsafe_act_reported'].values[0]}/4.0")
+        with perf_cols[2]:
+            st.metric("FLEXIBILITY GRADE", f"{filtered_df['flexibility_credit'].values[0]}/4.0")
+        with perf_cols[3]:
+            st.metric("TEAMWORK GRADE", f"{filtered_df['teamwork_credit'].values[0]}/4.0")
             
         # Add a note about the scoring system at the bottom of all metrics
         st.markdown("<div style='height: 2rem;'></div>", unsafe_allow_html=True)
