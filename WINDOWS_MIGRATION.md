@@ -56,13 +56,44 @@ pip install mysql-connector-python
 
 ### 3. Update Database Schema
 
-Run the provided SQL script to update your existing database schema:
+There are two ways to update your existing database schema:
+
+#### Option 1: Using the Python Script (Recommended)
+
+Run the provided Python script to update your database schema:
+
+```cmd
+python src\utils\run_update_schema.py
+```
+
+This script will:
+- Connect to your database using the credentials in database.py
+- Execute all commands in update_schema.sql
+- Show the results of any SELECT or SHOW commands
+- Handle errors gracefully and provide detailed error messages
+
+#### Option 2: Using MySQL Command Line
+
+If you prefer to use the MySQL command line directly:
 
 ```cmd
 mysql -u arshia.goswami -p PERFORMANCEDB < src\utils\update_schema.sql
 ```
 
-This script will:
+Or with an absolute path if the relative path doesn't work:
+
+```cmd
+mysql -u arshia.goswami -p PERFORMANCEDB < "C:\full\path\to\src\utils\update_schema.sql"
+```
+
+#### Option 3: Using MySQL Workbench
+
+1. Open MySQL Workbench
+2. Connect to your server
+3. Open the update_schema.sql file
+4. Click the lightning bolt icon to execute
+
+The update_schema.sql script will:
 - Add new columns to the employee_core_data table (role, zone)
 - Add new columns to the performance_metrics table (sl, audit_nc_score, wi_ppe_score, ojt_test_score, dwm_adherence_score)
 - Update employee roles based on employee ID pattern

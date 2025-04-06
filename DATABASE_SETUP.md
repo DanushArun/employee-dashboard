@@ -60,11 +60,25 @@ This guide will help you set up the MySQL database for the Employee Performance 
 
 3. **Create Database Tables**
    - Open Command Prompt in your project directory
-   - Run the SQL script:
+   - Run the SQL script using one of these methods:
+   
+     **Option 1: Using the Python Script (Recommended)**
+     ```cmd
+     python src\utils\run_create_tables.py
+     ```
+     This Python script will connect to your database and execute all SQL commands in create_tables.sql, showing detailed results and error messages.
+     
+     **Option 2: Using MySQL Command Line**
      ```cmd
      mysql -u arshia.goswami -p PERFORMANCEDB < src\utils\create_tables.sql
      ```
-   - Enter password: `Ather@123`
+     Enter password: `Ather@123`
+     
+     **Option 3: Using MySQL Workbench**
+     1. Open MySQL Workbench
+     2. Connect to your server
+     3. Open the create_tables.sql file
+     4. Click the lightning bolt icon to execute
 
 4. **Update Connection Settings**
    - Open `src\utils\database.py`
