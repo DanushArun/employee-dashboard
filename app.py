@@ -12,7 +12,7 @@ from src.components.charts import (
     create_status_distribution,
     create_zone_distribution
 )
-from src.utils.database import fetch_core_data, fetch_performance_data, fetch_zone_leaders_data, fetch_r_cadres_data
+from src.utils.database import fetch_core_data, fetch_performance_data, fetch_zone_leaders_data, fetch_r_cadres_data, fetch_line_loss_count
 
 # Page config
 st.set_page_config(
@@ -301,13 +301,15 @@ def load_data():
         # Fetch core data
         core_df = fetch_core_data()
         if core_df.empty:
-            st.error("Failed to fetch core data from database")
+            st.error("Failed to fetch core data from database. Please check your database connection.")
+            st.info("To configure database connection, create a 'db_config.json' file in the project root or set environment variables (DB_HOST, DB_NAME, DB_USER, DB_PASSWORD).")
             return pd.DataFrame()
             
         # Fetch performance data
         perf_df = fetch_performance_data()
         if perf_df.empty:
-            st.error("Failed to fetch performance data from database")
+            st.error("Failed to fetch performance data from database. Please check your database connection.")
+            st.info("To configure database connection, create a 'db_config.json' file in the project root or set environment variables (DB_HOST, DB_NAME, DB_USER, DB_PASSWORD).")
             return pd.DataFrame()
             
         # Merge core and performance data
@@ -479,6 +481,33 @@ if employee_id:
 
             # Display metrics based on role
             role = filtered_df['role'].values[0]
+            
+            # Get employee's zone information
+            employee_zone = int(filtered_df['zone'].values[0])
+            
+            # Extract line information from the employee data
+            # We'll look for patterns in the data to determine the line
+            # For example, if there's a column that contains line information
+            
+            # For now, we'll determine the line based on the employee ID pattern
+            # This is a placeholder logic and should be replaced with actual logic based on your data
+            employee_id_str = str(employee_id)
+            
+            # Example logic: If employee ID contains "1", it's Line 1, if it contains "2", it's Line 2, etc.
+            if "1" in employee_id_str:
+                line_number = 1
+            elif "2" in employee_id_str:
+                line_number = 2
+            else:
+                # Default to Line 2 if we can't determine
+                line_number = 2
+            
+            # Fetch line loss count for the employee's line and zone
+            line_loss_count = fetch_line_loss_count(line_number, employee_zone)
+            
+            # Display Grade (Line Loss Count)
+            st.markdown("<h3 class='halo-font' style='font-size: 1.5rem;'>GRADE</h3>", unsafe_allow_html=True)
+            st.metric(f"LINE {line_number} LOSS COUNT FOR ZONE {employee_zone}", line_loss_count)
             
             # Common metrics for both roles
             common_metrics = st.container()

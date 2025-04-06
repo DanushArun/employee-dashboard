@@ -33,6 +33,23 @@ cd employee-dashboard
 pip install -r requirements.txt
 ```
 
+3. Configure the database connection:
+   - Rename `db_config.json.template` to `db_config.json`
+   - Edit the file to match your database configuration:
+   ```json
+   {
+     "host": "your-database-server",
+     "database": "your-database-name",
+     "user": "your-username",
+     "password": "your-password"
+   }
+   ```
+   - Alternatively, you can set the following environment variables:
+     - `DB_HOST`: Database server hostname
+     - `DB_NAME`: Database name
+     - `DB_USER`: Database username
+     - `DB_PASSWORD`: Database password
+
 ## Running the Dashboard
 
 ### Method 1: Direct Run

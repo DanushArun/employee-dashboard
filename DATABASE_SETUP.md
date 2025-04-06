@@ -80,16 +80,43 @@ This guide will help you set up the MySQL database for the Employee Performance 
      3. Open the create_tables.sql file
      4. Click the lightning bolt icon to execute
 
-4. **Update Connection Settings**
-   - Open `src\utils\database.py`
-   - Verify connection settings:
+4. **Configure Database Connection**
+   - **Option 1: Using db_config.json (Recommended)**
+     - Create a `db_config.json` file in the project root directory:
+     ```json
+     {
+       "host": "localhost",
+       "database": "PERFORMANCEDB",
+       "user": "arshia.goswami",
+       "password": "Ather@123"
+     }
+     ```
+     - You can use the provided template:
+     ```cmd
+     copy db_config.json.template db_config.json
+     ```
+     - Then edit the file with your database details
+
+   - **Option 2: Using Environment Variables**
+     - Set the following environment variables:
+     ```cmd
+     set DB_HOST=localhost
+     set DB_NAME=PERFORMANCEDB
+     set DB_USER=arshia.goswami
+     set DB_PASSWORD=Ather@123
+     ```
+     - For permanent environment variables, use System Properties > Environment Variables
+
+   - **Option 3: Direct Code Modification (Not Recommended)**
+     - Open `src\utils\database.py`
+     - Modify the DEFAULT_DB_CONFIG dictionary:
      ```python
-     connection = mysql.connector.connect(
-         host="localhost",
-         database="PERFORMANCEDB",
-         user="arshia.goswami",
-         password="Ather@123"
-     )
+     DEFAULT_DB_CONFIG = {
+         "host": "localhost",
+         "database": "PERFORMANCEDB",
+         "user": "arshia.goswami",
+         "password": "Ather@123"
+     }
      ```
 
 5. **Migrate Data**

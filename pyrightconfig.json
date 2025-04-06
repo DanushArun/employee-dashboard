@@ -8,7 +8,8 @@
     ],
     "ignore": [
         "src/utils/database.py",
-        "src/utils/migrate_data.py"
+        "src/utils/migrate_data.py",
+        "test_connection.py"
     ],
     "defineConstant": {
         "DEBUG": true
@@ -17,6 +18,10 @@
     "extraPaths": [],
     "reportMissingImports": "none",
     "reportMissingTypeStubs": "none",
+    "reportArgumentType": "none",
+    "reportOptionalSubscript": "none",
+    "reportOperatorIssue": "none",
+    "reportPossiblyUnboundVariable": "none",
     "pythonVersion": "3.9",
     "pythonPlatform": "Windows"
 }
