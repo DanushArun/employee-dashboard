@@ -6,7 +6,7 @@ def create_db_connection():
     """Create a connection to the MySQL database"""
     try:
         connection = mysql.connector.connect(
-            host="localhost",
+            host="AE-LP-2817\\PERFORMANCE_DASH",  # Windows server with double backslashes
             database="PERFORMANCEDB",
             user="arshia.goswami",
             password="Ather@123"
@@ -25,6 +25,8 @@ def migrate_data():
         # Read the CSV file
         with open('data/Test Data.csv', 'r') as f:
             content = f.read()
+        
+        print("Starting data migration...")
         
         # Split by lines
         lines = content.split('\n')
@@ -113,15 +115,24 @@ def migrate_data():
                 training_count = parts[2].strip()
                 status = parts[3].strip()
                 
+                # Determine role based on employee ID pattern or other logic
+                # For example, employee IDs starting with 'Z' are zone leaders
+                role = 'ZONE_LEADER' if employee_id.startswith('Z') else 'R_CADRE'
+                
+                # Assign a default zone (will be updated later)
+                default_zone = 1
+                
                 cursor.execute("""
                     INSERT INTO employee_core_data 
-                    (employee_id, trainer_grade, training_count, status)
-                    VALUES (%s, %s, %s, %s)
+                    (employee_id, trainer_grade, training_count, status, role, zone)
+                    VALUES (%s, %s, %s, %s, %s, %s)
                 """, (
                     employee_id,
                     float(training_grade) if training_grade.isdigit() else 0,
                     int(training_count) if training_count.isdigit() else 0,
-                    status.capitalize()
+                    status.capitalize(),
+                    role,
+                    default_zone
                 ))
         
         # Process performance metrics
@@ -193,14 +204,16 @@ def migrate_data():
         for key, data in performance_data.items():
             cursor.execute("""
                 INSERT INTO performance_metrics 
-                (employee_id, month, ul, pl, zone, line_loss, error_count,
+                (employee_id, month, ul, sl, pl, zone, line_loss, error_count,
                 unsafe_act_reported, unsafe_act_responsible, kaizen_responsible,
-                flexibility_credit, teamwork_credit)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                flexibility_credit, teamwork_credit, audit_nc_score, wi_ppe_score,
+                ojt_test_score, dwm_adherence_score)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """, (
                 data['employee_id'],
                 data['month'],
                 data['ul'],
+                0,  # Default SL value
                 data['pl'],
                 data['zone'],
                 data['line_loss'],
@@ -209,7 +222,11 @@ def migrate_data():
                 data['unsafe_act_responsible'],
                 data['kaizen_responsible'],
                 data['flexibility_credit'],
-                data['teamwork_credit']
+                data['teamwork_credit'],
+                0,  # Default audit_nc_score
+                0,  # Default wi_ppe_score
+                0,  # Default ojt_test_score
+                0   # Default dwm_adherence_score
             ))
         
         # Commit changes

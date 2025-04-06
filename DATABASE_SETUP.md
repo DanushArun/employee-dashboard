@@ -142,13 +142,16 @@ This guide will help you set up the MySQL database for the Employee Performance 
 - trainer_grade (FLOAT)
 - training_count (INT)
 - status (VARCHAR(20))
+- role (VARCHAR(20)) - 'ZONE_LEADER' or 'R_CADRE'
+- zone (INT)
 
 ### performance_metrics
 - id (INT, Auto Increment, Primary Key)
 - employee_id (VARCHAR(10), Foreign Key)
 - month (VARCHAR(10))
-- ul (FLOAT)
-- pl (FLOAT)
+- ul (FLOAT) - Unplanned Leave
+- sl (FLOAT) - Sick Leave
+- pl (FLOAT) - Planned Leave
 - zone (INT)
 - line_loss (FLOAT)
 - error_count (INT)
@@ -157,6 +160,32 @@ This guide will help you set up the MySQL database for the Employee Performance 
 - kaizen_responsible (INT)
 - flexibility_credit (INT)
 - teamwork_credit (INT)
+- audit_nc_score (FLOAT) - For Zone Leaders
+- wi_ppe_score (FLOAT) - For R Cadres
+- ojt_test_score (FLOAT)
+- dwm_adherence_score (FLOAT) - For Zone Leaders
+
+## Dashboard Features
+
+The dashboard now includes the following features based on the Excel specifications:
+
+1. **Role-Based Metrics**
+   - Zone Leaders: Audit NCs, Line Loss, Associate Error, Absenteeism, Performance Credits, OJT Test Score, DWM Adherence
+   - R Cadres: Line Loss, Associate Error, Absenteeism, Performance Credits, WI & PPE, OJT Test Score
+
+2. **Grading System**
+   - Audit NCs: 4=100%, 3=85-99%, 2=65-85%, 1=<65%
+   - Line Loss: 4=0, 3=1-3%, 2=3-5%, 1=>5%
+   - Associate Error: 4=0, 3=1-3, 2=4-6, 1=>6
+   - Absenteeism: Based on UL and SL counts
+   - Performance Credits: 4=>9, 3=6-9, 2=3-6, 1=<3
+   - OJT Test Score: Normalized to 4.0 scale
+   - WI & PPE: Based on yes/no questions
+   - DWM Adherence: Normalized to 4.0 scale
+
+3. **Real-time Updates**
+   - Data refreshes automatically every 60 seconds
+   - Manual refresh button available
 
 ## Running the Dashboard
 
@@ -173,6 +202,13 @@ This guide will help you set up the MySQL database for the Employee Performance 
    - The dashboard will open in your default browser
    - Default URL: http://localhost:8501
    - Check console for any error messages
+
+2. **Testing with Sample Data**
+   - The dashboard requires employee role information to display correctly
+   - Sample data is generated with roles based on employee ID pattern
+   - Employee IDs starting with 'Z' are assigned as Zone Leaders
+   - All other employee IDs are assigned as R Cadres
+   - You can modify this logic in migrate_data.py if needed
 
 2. **Real-time Updates**
    - The dashboard automatically refreshes data every 60 seconds

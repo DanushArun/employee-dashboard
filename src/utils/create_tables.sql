@@ -3,7 +3,9 @@ CREATE TABLE employee_core_data (
     employee_id VARCHAR(10) PRIMARY KEY,
     trainer_grade FLOAT,
     training_count INT,
-    status VARCHAR(20)
+    status VARCHAR(20),
+    role VARCHAR(20),  -- 'ZONE_LEADER' or 'R_CADRE'
+    zone INT
 );
 
 -- Create performance metrics table
@@ -12,6 +14,7 @@ CREATE TABLE performance_metrics (
     employee_id VARCHAR(10),
     month VARCHAR(10),
     ul FLOAT,
+    sl FLOAT,
     pl FLOAT,
     zone INT,
     line_loss FLOAT,
@@ -21,6 +24,10 @@ CREATE TABLE performance_metrics (
     kaizen_responsible INT,
     flexibility_credit INT,
     teamwork_credit INT,
+    audit_nc_score FLOAT,
+    wi_ppe_score FLOAT,
+    ojt_test_score FLOAT,
+    dwm_adherence_score FLOAT,
     FOREIGN KEY (employee_id) REFERENCES employee_core_data(employee_id)
 );
 

@@ -12,7 +12,7 @@ from src.components.charts import (
     create_status_distribution,
     create_zone_distribution
 )
-from src.utils.database import fetch_core_data, fetch_performance_data
+from src.utils.database import fetch_core_data, fetch_performance_data, fetch_zone_leaders_data, fetch_r_cadres_data
 
 # Page config
 st.set_page_config(
@@ -248,6 +248,52 @@ st.markdown("""
     <h1 class="halo-font">Employee Performance Dashboard</h1>
 """, unsafe_allow_html=True)
 
+# Helper function to calculate grades based on criteria
+def calculate_grade(value, criteria):
+    """Calculate grade based on criteria"""
+    if criteria == 'audit_nc':
+        # 4=100%, 3=85-99%, 2=65-85%, 1=<65%
+        if value >= 100:
+            return 4.0
+        elif value >= 85:
+            return 3.0
+        elif value >= 65:
+            return 2.0
+        else:
+            return 1.0
+    elif criteria == 'submissions':
+        # 4=>9, 3=6-9, 2=3-6, 1=<3
+        if value >= 9:
+            return 4.0
+        elif value >= 6:
+            return 3.0
+        elif value >= 3:
+            return 2.0
+        else:
+            return 1.0
+    elif criteria == 'line_loss':
+        # 4=0, 3=1-3%, 2=3-5%, 1=>5%
+        if value == 0:
+            return 4.0
+        elif value <= 3:
+            return 3.0
+        elif value <= 5:
+            return 2.0
+        else:
+            return 1.0
+    elif criteria == 'error_count':
+        # 4=0, 3=1-3, 2=4-6, 1=>6
+        if value == 0:
+            return 4.0
+        elif value <= 3:
+            return 3.0
+        elif value <= 6:
+            return 2.0
+        else:
+            return 1.0
+    else:
+        return 0.0
+
 # Load and cache data with auto-refresh
 @st.cache_data(ttl=60)  # Cache data for 60 seconds
 def load_data():
@@ -270,27 +316,58 @@ def load_data():
         # Fill NaN values
         df = df.fillna(0)
         
-        # Normalize metrics to 0-1 range
-        df['norm_trainer_grade'] = df['trainer_grade'] / 4.0  # Assuming max grade is 4
-        df['norm_training_count'] = df['training_count'] / df['training_count'].max() if df['training_count'].max() > 0 else 0
-        df['norm_ul'] = 1 - (df['ul'] / 5.0)  # Lower is better, max assumed 5
-        df['norm_pl'] = 1 - (df['pl'] / 5.0)  # Lower is better, max assumed 5
-        df['norm_error_count'] = 1 - (df['error_count'] / df['error_count'].max()) if df['error_count'].max() > 0 else 1
-        df['norm_kaizen'] = df['kaizen_responsible'] / df['kaizen_responsible'].max() if df['kaizen_responsible'].max() > 0 else 0
-        df['norm_flexibility'] = df['flexibility_credit'] / df['flexibility_credit'].max() if df['flexibility_credit'].max() > 0 else 0
-        df['norm_teamwork'] = df['teamwork_credit'] / df['teamwork_credit'].max() if df['teamwork_credit'].max() > 0 else 0
+        # Calculate grades based on criteria from Excel sheet
+        df['audit_nc_grade'] = df.apply(lambda row: calculate_grade(row['audit_nc_score'], 'audit_nc') 
+                                       if row['role'] == 'ZONE_LEADER' else 0, axis=1)
         
-        # Calculate weighted normalized total score (weights sum to 1)
-        df['total_marks'] = (
-            df['norm_trainer_grade'] * 0.20 +  # Core competency
-            df['norm_training_count'] * 0.10 +  # Learning progress
-            df['norm_ul'] * 0.15 +  # Performance metrics
-            df['norm_pl'] * 0.15 +
-            df['norm_error_count'] * 0.10 +
-            df['norm_kaizen'] * 0.15 +  # Initiative and improvement
-            df['norm_flexibility'] * 0.075 +  # Soft skills
-            df['norm_teamwork'] * 0.075  # Collaboration
-        ) * 4.0  # Scale to 0-4.0 range
+        df['line_loss_grade'] = df.apply(lambda row: calculate_grade(row['line_loss'], 'line_loss'), axis=1)
+        
+        df['error_count_grade'] = df.apply(lambda row: calculate_grade(row['error_count'], 'error_count'), axis=1)
+        
+        df['absenteeism_grade'] = df.apply(lambda row: 
+                                          4.0 if row['ul'] == 0 and row['sl'] == 0 else
+                                          3.0 if row['ul'] == 0 and row['sl'] <= 1 else
+                                          2.0 if row['ul'] <= 1 or row['sl'] <= 2 else
+                                          1.0, axis=1)
+        
+        df['flexibility_grade'] = df.apply(lambda row: calculate_grade(row['flexibility_credit'], 'submissions'), axis=1)
+        df['teamwork_grade'] = df.apply(lambda row: calculate_grade(row['teamwork_credit'], 'submissions'), axis=1)
+        df['unsafe_act_grade'] = df.apply(lambda row: calculate_grade(row['unsafe_act_reported'], 'submissions'), axis=1)
+        df['kaizen_grade'] = df.apply(lambda row: calculate_grade(row['kaizen_responsible'], 'submissions'), axis=1)
+        
+        # WI & PPE grade (only for R cadres)
+        df['wi_ppe_grade'] = df.apply(lambda row: row['wi_ppe_score'] if row['role'] == 'R_CADRE' else 0, axis=1)
+        
+        # OJT test score (normalized to 4.0)
+        df['ojt_test_grade'] = df['ojt_test_score'] / 100 * 4.0
+        
+        # DWM adherence (only for zone leaders)
+        df['dwm_adherence_grade'] = df.apply(lambda row: row['dwm_adherence_score'] 
+                                            if row['role'] == 'ZONE_LEADER' else 0, axis=1)
+        
+        # Calculate total grade based on role
+        df['total_marks'] = df.apply(lambda row:
+            # For Zone Leaders
+            (row['audit_nc_grade'] * 0.10 +
+             row['line_loss_grade'] * 0.15 +
+             row['error_count_grade'] * 0.10 +
+             row['absenteeism_grade'] * 0.15 +
+             row['flexibility_grade'] * 0.10 +
+             row['teamwork_grade'] * 0.10 +
+             row['unsafe_act_grade'] * 0.10 +
+             row['kaizen_grade'] * 0.10 +
+             row['ojt_test_grade'] * 0.05 +
+             row['dwm_adherence_grade'] * 0.05) if row['role'] == 'ZONE_LEADER' else
+            # For R Cadres
+            (row['line_loss_grade'] * 0.15 +
+             row['error_count_grade'] * 0.15 +
+             row['absenteeism_grade'] * 0.15 +
+             row['flexibility_grade'] * 0.10 +
+             row['teamwork_grade'] * 0.10 +
+             row['unsafe_act_grade'] * 0.10 +
+             row['kaizen_grade'] * 0.10 +
+             row['wi_ppe_grade'] * 0.10 +
+             row['ojt_test_grade'] * 0.05), axis=1)
         
         # Convert month to date
         month_map = {
@@ -400,63 +477,84 @@ if employee_id:
                     </div>
                 """.format(filtered_df['total_marks'].values[0]), unsafe_allow_html=True)
 
-        # OJT Score section
-        st.markdown("<h3 class='halo-font' style='font-size: 1.5rem; margin-top: 0;'>OJT</h3>", unsafe_allow_html=True)
-        ojt_cols = st.columns(4)
-        
-        with ojt_cols[0]:
-            st.metric("TRAINEE GRADE", f"{filtered_df['trainer_grade'].values[0]:.1f}/4.0")
-        with ojt_cols[1]:
-            st.metric("TRAINER GRADE", f"{filtered_df['trainer_grade'].values[0]:.1f}/4.0")
-        with ojt_cols[2]:
-            st.metric("STATUS", filtered_df['status'].values[0])
-        with ojt_cols[3]:
-            st.metric("PERCENTILE", "85%")
-        
-        # Absenteeism section
-        st.markdown("<h3 class='halo-font' style='font-size: 1.5rem;'>ABSENTEEISM</h3>", unsafe_allow_html=True)
-        abs_cols = st.columns(2)
-        with abs_cols[0]:
-            st.metric("INDIVIDUAL ABSENTEEISM", f"{filtered_df['ul'].values[0]:.1f}")
-        with abs_cols[1]:
-            st.metric("ZONAL ABSENTEEISM", f"{filtered_df['pl'].values[0]:.1f}")
-        
-        # Line Loss section
-        st.markdown("<h3 class='halo-font' style='font-size: 1.5rem;'>LINE LOSS</h3>", unsafe_allow_html=True)
-        line_cols = st.columns(2)
-        with line_cols[0]:
-            st.metric("LINE LOSS COUNT", int(filtered_df['line_loss'].values[0]))
-        with line_cols[1]:
-            st.metric("LINE LOSS GRADE", "3.5/4.0")
-        
-        # Associate Error section
-        st.markdown("<h3 class='halo-font' style='font-size: 1.5rem;'>ASSOCIATE ERROR</h3>", unsafe_allow_html=True)
-        error_cols = st.columns(2)
-        with error_cols[0]:
-            st.metric("ASSOCIATE ERROR COUNT", int(filtered_df['error_count'].values[0]))
-        with error_cols[1]:
-            st.metric("ASSOCIATE ERROR GRADE", "3.0/4.0")
-        
-        # Adherence sections
-        adh_cols = st.columns(2)
-        with adh_cols[0]:
-            st.markdown("<h3 class='halo-font' style='font-size: 1.5rem;'>WI & PPE ADHERENCE</h3>", unsafe_allow_html=True)
-            st.metric("GRADE", "3.8/4.0")
-        with adh_cols[1]:
-            st.markdown("<h3 class='halo-font' style='font-size: 1.5rem;'>DWM ADHERENCE</h3>", unsafe_allow_html=True)
-            st.metric("GRADE", "3.5/4.0")
-        
-        # Performance Credits section
-        st.markdown("<h3 class='halo-font' style='font-size: 1.5rem;'>PERFORMANCE CREDITS</h3>", unsafe_allow_html=True)
-        perf_cols = st.columns(4)
-        with perf_cols[0]:
-            st.metric("KAIZEN GRADE", f"{filtered_df['kaizen_responsible'].values[0]}/4.0")
-        with perf_cols[1]:
-            st.metric("UNSAFE ACT GRADE", f"{filtered_df['unsafe_act_reported'].values[0]}/4.0")
-        with perf_cols[2]:
-            st.metric("FLEXIBILITY GRADE", f"{filtered_df['flexibility_credit'].values[0]}/4.0")
-        with perf_cols[3]:
-            st.metric("TEAMWORK GRADE", f"{filtered_df['teamwork_credit'].values[0]}/4.0")
+            # Display metrics based on role
+            role = filtered_df['role'].values[0]
+            
+            # Common metrics for both roles
+            common_metrics = st.container()
+            with common_metrics:
+                # Line Loss section
+                st.markdown("<h3 class='halo-font' style='font-size: 1.5rem;'>LINE LOSS</h3>", unsafe_allow_html=True)
+                line_cols = st.columns(2)
+                with line_cols[0]:
+                    st.metric("LINE LOSS COUNT", int(filtered_df['line_loss'].values[0]))
+                with line_cols[1]:
+                    st.metric("LINE LOSS GRADE", f"{filtered_df['line_loss_grade'].values[0]:.1f}/4.0")
+                
+                # Associate Error section
+                st.markdown("<h3 class='halo-font' style='font-size: 1.5rem;'>ASSOCIATE ERROR</h3>", unsafe_allow_html=True)
+                error_cols = st.columns(2)
+                with error_cols[0]:
+                    st.metric("ASSOCIATE ERROR COUNT", int(filtered_df['error_count'].values[0]))
+                with error_cols[1]:
+                    st.metric("ASSOCIATE ERROR GRADE", f"{filtered_df['error_count_grade'].values[0]:.1f}/4.0")
+                
+                # Absenteeism section
+                st.markdown("<h3 class='halo-font' style='font-size: 1.5rem;'>ABSENTEEISM</h3>", unsafe_allow_html=True)
+                abs_cols = st.columns(3)
+                with abs_cols[0]:
+                    st.metric("UL COUNT", f"{filtered_df['ul'].values[0]:.1f}")
+                with abs_cols[1]:
+                    st.metric("SL COUNT", f"{filtered_df['sl'].values[0]:.1f}")
+                with abs_cols[2]:
+                    st.metric("ABSENTEEISM GRADE", f"{filtered_df['absenteeism_grade'].values[0]:.1f}/4.0")
+                
+                # Performance Credits section
+                st.markdown("<h3 class='halo-font' style='font-size: 1.5rem;'>PERFORMANCE CREDITS</h3>", unsafe_allow_html=True)
+                perf_cols = st.columns(4)
+                with perf_cols[0]:
+                    st.metric("KAIZEN", f"{filtered_df['kaizen_responsible'].values[0]}")
+                    st.metric("GRADE", f"{filtered_df['kaizen_grade'].values[0]:.1f}/4.0")
+                with perf_cols[1]:
+                    st.metric("UNSAFE ACT", f"{filtered_df['unsafe_act_reported'].values[0]}")
+                    st.metric("GRADE", f"{filtered_df['unsafe_act_grade'].values[0]:.1f}/4.0")
+                with perf_cols[2]:
+                    st.metric("FLEXIBILITY", f"{filtered_df['flexibility_credit'].values[0]}")
+                    st.metric("GRADE", f"{filtered_df['flexibility_grade'].values[0]:.1f}/4.0")
+                with perf_cols[3]:
+                    st.metric("TEAMWORK", f"{filtered_df['teamwork_credit'].values[0]}")
+                    st.metric("GRADE", f"{filtered_df['teamwork_grade'].values[0]:.1f}/4.0")
+                
+                # OJT Test Score
+                st.markdown("<h3 class='halo-font' style='font-size: 1.5rem;'>OJT TEST SCORE</h3>", unsafe_allow_html=True)
+                ojt_cols = st.columns(2)
+                with ojt_cols[0]:
+                    st.metric("RAW SCORE", f"{filtered_df['ojt_test_score'].values[0]:.1f}/100")
+                with ojt_cols[1]:
+                    st.metric("NORMALIZED GRADE", f"{filtered_df['ojt_test_grade'].values[0]:.1f}/4.0")
+            
+            # Role-specific metrics
+            if role == 'ZONE_LEADER':
+                zone_leader_metrics = st.container()
+                with zone_leader_metrics:
+                    # Audit NCs (Zone Leaders only)
+                    st.markdown("<h3 class='halo-font' style='font-size: 1.5rem;'>AUDIT NCs</h3>", unsafe_allow_html=True)
+                    audit_cols = st.columns(2)
+                    with audit_cols[0]:
+                        st.metric("COMPLETION PERCENTAGE", f"{filtered_df['audit_nc_score'].values[0]:.1f}%")
+                    with audit_cols[1]:
+                        st.metric("AUDIT GRADE", f"{filtered_df['audit_nc_grade'].values[0]:.1f}/4.0")
+                    
+                    # DWM Adherence (Zone Leaders only)
+                    st.markdown("<h3 class='halo-font' style='font-size: 1.5rem;'>DWM ADHERENCE</h3>", unsafe_allow_html=True)
+                    st.metric("GRADE", f"{filtered_df['dwm_adherence_grade'].values[0]:.1f}/4.0")
+            
+            elif role == 'R_CADRE':
+                r_cadre_metrics = st.container()
+                with r_cadre_metrics:
+                    # WI & PPE (R Cadres only)
+                    st.markdown("<h3 class='halo-font' style='font-size: 1.5rem;'>WI & PPE ADHERENCE</h3>", unsafe_allow_html=True)
+                    st.metric("GRADE", f"{filtered_df['wi_ppe_grade'].values[0]:.1f}/4.0")
             
         # Add a note about the scoring system at the bottom of all metrics
         st.markdown("<div style='height: 2rem;'></div>", unsafe_allow_html=True)

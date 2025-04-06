@@ -6,16 +6,17 @@
         "**/node_modules",
         "**/__pycache__"
     ],
-    "ignore": [],
+    "ignore": [
+        "src/utils/database.py",
+        "src/utils/migrate_data.py"
+    ],
     "defineConstant": {
         "DEBUG": true
     },
     "typeshedPath": "",
-    "extraPaths": [
-        "/Users/danusharun/Library/Python/3.9/lib/python/site-packages"
-    ],
-    "reportMissingImports": "warning",
+    "extraPaths": [],
+    "reportMissingImports": "none",
     "reportMissingTypeStubs": "none",
     "pythonVersion": "3.9",
-    "pythonPlatform": "Darwin"
+    "pythonPlatform": "Windows"
 }
