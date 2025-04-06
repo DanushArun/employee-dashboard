@@ -1,0 +1,21 @@
+{
+    "include": [
+        "src"
+    ],
+    "exclude": [
+        "**/node_modules",
+        "**/__pycache__"
+    ],
+    "ignore": [],
+    "defineConstant": {
+        "DEBUG": true
+    },
+    "typeshedPath": "",
+    "extraPaths": [
+        "/Users/danusharun/Library/Python/3.9/lib/python/site-packages"
+    ],
+    "reportMissingImports": "warning",
+    "reportMissingTypeStubs": "none",
+    "pythonVersion": "3.9",
+    "pythonPlatform": "Darwin"
+}
