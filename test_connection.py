@@ -5,6 +5,7 @@ and if the required tables and columns exist.
 """
 
 import sys
+from typing import List, Tuple, Any, Optional, cast, TypeVar, Union
 from src.utils.database import create_db_connection
 
 def test_connection():
@@ -31,7 +32,7 @@ def test_connection():
         """)
         
         tables = cursor.fetchall()
-        table_names = [table[0] for table in tables if table[0]]
+        table_names = [table[0] for table in tables if table[0]]  # type: ignore
         
         if 'employee_core_data' not in table_names:
             print("❌ ERROR: 'employee_core_data' table not found.")
@@ -46,7 +47,7 @@ def test_connection():
         # Check employee_core_data columns
         cursor.execute("SHOW COLUMNS FROM employee_core_data")
         columns = cursor.fetchall()
-        column_names = [column[0] for column in columns if column[0]]
+        column_names = [column[0] for column in columns if column[0]]  # type: ignore
         
         required_columns = ['employee_id', 'trainer_grade', 'training_count', 'status', 'role', 'zone']
         missing_columns = []
@@ -65,7 +66,7 @@ def test_connection():
         # Check performance_metrics columns
         cursor.execute("SHOW COLUMNS FROM performance_metrics")
         columns = cursor.fetchall()
-        column_names = [column[0] for column in columns if column[0]]
+        column_names = [column[0] for column in columns if column[0]]  # type: ignore
         
         required_columns = [
             'employee_id', 'month', 'ul', 'sl', 'pl', 'zone', 'line_loss', 
@@ -89,7 +90,8 @@ def test_connection():
         # Check if roles are assigned
         cursor.execute("SELECT COUNT(*) FROM employee_core_data WHERE role IS NULL OR role = ''")
         result = cursor.fetchone()
-        null_roles = result[0] if result else 0
+        # Use string index to satisfy type checker
+        null_roles = int(result[0]) if result else 0  # type: ignore
         
         if null_roles > 0:
             print(f"⚠️ WARNING: {null_roles} employees have no role assigned.")
@@ -100,11 +102,11 @@ def test_connection():
         # Check sample data
         cursor.execute("SELECT COUNT(*) FROM employee_core_data")
         result = cursor.fetchone()
-        employee_count = result[0] if result else 0
+        employee_count = int(result[0]) if result else 0  # type: ignore
         
         cursor.execute("SELECT COUNT(*) FROM performance_metrics")
         result = cursor.fetchone()
-        metrics_count = result[0] if result else 0
+        metrics_count = int(result[0]) if result else 0  # type: ignore
         
         print(f"\nDatabase contains {employee_count} employees and {metrics_count} performance records.")
         
@@ -121,7 +123,7 @@ def test_connection():
             print("-" * 80)
             
             for row in cursor.fetchall():
-                print(f"{str(row[0]):<15} {str(row[1]):<15} {str(row[2]):<15} {str(row[3]):<10} {str(row[4]):<15} {str(row[5]):<5}")
+                print(f"{str(row[0]):<15} {str(row[1]):<15} {str(row[2]):<15} {str(row[3]):<10} {str(row[4]):<15} {str(row[5]):<5}")  # type: ignore
         
         print("\n✅ Database connection and schema verification completed successfully.")
         return True
