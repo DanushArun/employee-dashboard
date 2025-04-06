@@ -6,11 +6,10 @@ def create_db_connection():
     """Create a connection to the MySQL database"""
     try:
         connection = mysql.connector.connect(
-            host="AE-LP-2817/PERFORMANCE_DASH",  # Forward slash for cross-platform compatibility
+            host="localhost",
             database="PERFORMANCEDB",
             user="arshia.goswami",
-            password="Ather@123",
-            port=3306  # Default MySQL port
+            password="Ather@123"
         )
         return connection
     except Error as e:
