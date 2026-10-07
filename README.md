@@ -1,7 +1,65 @@
-# Employee Performance Dashboard
+![Employee Performance workflow](docs/assets/project-overview.svg)
+
+# Employee Performance
+
+**Inspect the inputs behind the performance view.**
 
 A Streamlit dashboard for inspecting employee training, performance and safety metrics
 from a MySQL database. It combines employee views, trends, comparisons and zone/status summaries.
+
+
+![Streamlit](https://img.shields.io/badge/Streamlit-181f28)
+![MySQL](https://img.shields.io/badge/MySQL-181f28)
+![Pandas](https://img.shields.io/badge/Pandas-181f28)
+
+[Architecture](docs/ARCHITECTURE.md) · [Evaluation guide](docs/EVALUATION.md)
+
+**Contents:** [The challenge](#the-challenge) · [Walkthrough](#walk-through-the-project) ·
+[Implementation](#implementation-state) · [Design choices](#engineering-choices) ·
+[Next evidence](#next-evidence-to-collect)
+
+---
+
+## The challenge
+
+Employee metrics become difficult to interpret when training, safety and production indicators sit
+in separate records. This dashboard joins configured SQL-backed records into employee, trend,
+comparison and zone views, while leaving the scoring criteria in source.
+
+## System at a glance
+
+```mermaid
+flowchart LR
+    N0["MySQL tables"]
+    N1["SQL helpers"]
+    N2["Dataframes"]
+    N3["Performance views"]
+    N0 --> N1
+    N1 --> N2
+    N2 --> N3
+```
+
+## Walk through the project
+
+### 1. Prepare authorized data
+
+Review the core/metrics schema and use a synthetic test database. The application does not
+manufacture data when a database is missing.
+
+### 2. Select an employee
+
+Inspect the employee record and selected period. Database helpers produce the dataframes consumed
+by the dashboard.
+
+### 3. Compare the indicators
+
+Review training, performance, safety and teamwork metrics and their grading criteria. Comparisons
+are product calculations, not independent employment judgments.
+
+### 4. Trace a chart
+
+Follow the displayed result back to its SQL query and input record. Validate missing data and
+normalization before interpreting differences.
 
 ## Data-to-view flow
 
@@ -56,3 +114,33 @@ There is no committed automated test suite or measured accuracy benchmark.
 Displayed scores depend on the input data and implemented criteria; they are not an independently
 validated employee assessment. Use synthetic records when checking the dashboard outside an
 authorized employee-data environment.
+
+## Engineering choices
+
+**SQL is the active data path.** The application queries MySQL rather than reading the old README
+CSV schema.
+
+**Input criteria are inspectable.** Grades and normalized chart values need review with their
+underlying definitions.
+
+**Database changes are separate.** Schema scripts are reviewed against a test schema before
+execution.
+
+## Implementation state
+
+| State | Current evidence |
+| --- | --- |
+| Present | SQL-backed views, grade logic and charts |
+| Present | Schema/migration helper source |
+| Configuration required | Populated, authorized MySQL instance |
+| Not validated | Assessment fairness, data accuracy or production access controls |
+
+The [architecture guide](docs/ARCHITECTURE.md) maps these statements to source entry points.
+The [evaluation guide](docs/EVALUATION.md) separates inspection, executable checks and
+domain validation, with the next evidence needed for each project.
+
+## Next evidence to collect
+
+- Build a synthetic database acceptance fixture.
+- Check chart calculations against known records.
+- Review data access, missingness and scoring interpretation.
