@@ -1,148 +1,58 @@
 # Employee Performance Dashboard
 
-A modern, industrial-grade dashboard for tracking employee performance metrics built with Streamlit.
+A Streamlit dashboard for inspecting employee training, performance and safety metrics
+from a MySQL database. It combines employee views, trends, comparisons and zone/status summaries.
 
-## Features
+## Data-to-view flow
 
-- **Employee Selection**: Searchable dropdown to select employees by ID
-- **Date Range Filtering**: Select custom date ranges to view performance metrics
-- **Performance Radar Chart**: Interactive radar visualization showing normalized scores for:
-  - Trainer Grade (0-4 scale)
-  - Training Count
-  - Upper Limit (UL) Score
-  - Performance Level (PL) Score
-  - Error Count
-  - Kaizen Responsibility
-  - Flexibility
-  - Teamwork
-- **Trend Analysis**: Line charts showing metric progression over time
-- **Comparative Analysis**: Bar charts comparing individual metrics against team averages
-- **Status Distribution**: Visual breakdown of Pass/Fail ratios
-- **Zone Distribution**: Bar chart showing employee distribution across work zones
+```mermaid
+flowchart LR
+    DB[MySQL employee and metrics tables] --> Query[Database helpers]
+    Query --> Frame[Pandas dataframes]
+    Frame --> UI[Streamlit filters and charts]
+```
 
-## Installation
+The active application uses SQL-backed data; the older README's flat CSV description did not
+match that path. Metrics include trainer grade, training count, UL/SL/PL, error count,
+kaizen, flexibility, teamwork and additional safety/performance fields.
 
-1. Clone this repository:
+## Local setup
+
 ```bash
 git clone https://github.com/DanushArun/employee-dashboard.git
 cd employee-dashboard
-```
-
-2. Install the required dependencies:
-```bash
-pip install -r requirements.txt
-```
-
-3. Configure the database connection:
-   - Rename `db_config.json.template` to `db_config.json`
-   - Edit the file to match your database configuration:
-   ```json
-   {
-     "host": "your-database-server",
-     "database": "your-database-name",
-     "user": "your-username",
-     "password": "your-password"
-   }
-   ```
-   - Alternatively, you can set the following environment variables:
-     - `DB_HOST`: Database server hostname
-     - `DB_NAME`: Database name
-     - `DB_USER`: Database username
-     - `DB_PASSWORD`: Database password
-
-## Running the Dashboard
-
-### Method 1: Direct Run
-
-```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+cp db_config.json.template db_config.json
 streamlit run app.py
 ```
 
-### Method 2: Using the Deployment Script
+Edit `db_config.json` with your own MySQL connection, or set `DB_HOST`, `DB_NAME`, `DB_USER`
+and `DB_PASSWORD`. Open the URL printed by Streamlit, normally `http://localhost:8501`.
+A reachable, populated database is required; dependency installation alone provides no employee
+data.
 
-```bash
-streamlit run deploy.py
-```
+## Expected schema
 
-This will provide you with deployment options:
-- Local deployment
-- Instructions for Streamlit Cloud deployment
+[src/utils/create_tables.sql](src/utils/create_tables.sql) defines `employee_core_data` and
+`performance_metrics`, linked by employee ID. Metrics are recorded against a `month` field.
+Review this schema and [update_schema.sql](src/utils/update_schema.sql) against your own test
+schema before executing SQL or migration helpers. This documentation update did not alter a
+database.
 
-## Deployment
+## Source map
 
-### Local Deployment
+- [app.py](app.py): dashboard layout, filtering and grade calculations.
+- [database.py](src/utils/database.py): configuration and SQL reads.
+- [charts.py](src/components/charts.py): chart construction.
+- [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md): recorded deployment instructions.
 
-Run the dashboard locally using the instructions above. The dashboard will be accessible at:
-- Local URL: http://localhost:8501
-- Network URL: http://your-ip-address:8501
+## Verification and boundaries
 
-### Cloud Deployment
-
-For detailed instructions on deploying to Streamlit Cloud, see the [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) file.
-
-In summary:
-1. Push your code to GitHub
-2. Sign up for [Streamlit Cloud](https://share.streamlit.io/)
-3. Connect your GitHub repository
-4. Deploy with a few clicks
-5. Share the generated URL with anyone
-
-The dashboard will be accessible from anywhere with an internet connection, and updates automatically when you push changes to GitHub.
-
-## Data Structure
-
-The dashboard expects a CSV file with the following columns:
-- `employee_id`: Unique identifier for each employee
-- `trainer_grade`: Decimal grade value (0-4 scale)
-- `training_count`: Number of training sessions completed
-- `ul`: Upper limit score (0-5 scale, lower is better)
-- `pl`: Performance level score (0-5 scale, lower is better)
-- `error_count`: Number of errors (0-5 scale, lower is better)
-- `kaizen_responsible`: Kaizen responsibility score (0-4 scale)
-- `flexibility_credit`: Flexibility rating (0-4 scale)
-- `teamwork_credit`: Teamwork rating (0-4 scale)
-- `status`: "Pass" or "Fail"
-- `zone`: Work zone assignment
-- `date`: Date in YYYY-MM-DD format
-
-## Tech Stack
-
-- **Frontend**: Streamlit for the web interface
-- **Data Visualization**: Altair for interactive charts
-- **Data Processing**: Pandas and NumPy for data manipulation
-- **Styling**: Custom theme configuration for a modern look
-
-## Dependencies
-
-The dashboard requires the following main packages:
-- streamlit
-- pandas
-- numpy
-- altair
-
-All dependencies are listed in `requirements.txt`.
-
-## Customization
-
-You can customize the dashboard by modifying:
-- `app.py`: Main application logic
-- `src/styles/theme.py`: Theme configuration
-- `src/assets/`: Place custom images and assets here
-- `src/components/charts.py`: Visualization components
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
-
-Please ensure your code follows the existing style and includes appropriate tests.
-
-## Support
-
-For issues and feature requests, please use the GitHub issue tracker.
-
-## License
-
-[MIT License](LICENSE)
+Source, schema and dependency paths were reviewed. No live employee database query,
+cloud deployment or browser acceptance run was performed for this README update.
+There is no committed automated test suite or measured accuracy benchmark.
+Displayed scores depend on the input data and implemented criteria; they are not an independently
+validated employee assessment. Use synthetic records when checking the dashboard outside an
+authorized employee-data environment.
